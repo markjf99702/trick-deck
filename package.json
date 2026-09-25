@@ -1,0 +1,9 @@
+{
+  "name": "trick-deck",
+  "private": true,
+  "type": "module",
+  "description": "Teach your dog tricks five tries at a time: a clicker, a coach and a scorecard in your pocket.",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

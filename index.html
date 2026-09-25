@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Trick Deck</title>
+  <meta name="description" content="Teach your dog tricks five tries at a time: a clicker in your phone, step-by-step plans for 48 tricks, a coach that says when to move on, and a trick show that deals from the ones your dog knows.">
+  <meta property="og:title" content="Trick Deck">
+  <meta property="og:description" content="Teach your dog tricks five tries at a time. A clicker, a coach and a scorecard in your pocket.">
+  <meta property="og:image" content="https://junkdrawer.works/trick-deck/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#f2f4ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121622" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preload" href="fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/figtree.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <a class="brand" href="#/">
+      <img src="icon.svg" alt="" width="30" height="30">
+      <span>Trick Deck</span>
+    </a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#/" data-tab="home"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Today</span></a>
+      <a href="#/deck" data-tab="deck"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="8" y="3.5" width="11" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 7.5 5 8.2l.1 11.3a1.6 1.6 0 0 0 1.6 1.5H15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Deck</span></a>
+      <a href="#/clicker" data-tab="clicker"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span>Clicker</span></a>
+      <a href="#/show" data-tab="show"><svg class="icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3.5l2.4 5.1 5.6.6-4.2 3.8 1.2 5.5L12 15.7l-5 2.8 1.2-5.5L4 9.2l5.6-.6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Show</span></a>
+      <a href="#/dog" data-tab="dog" id="dogTab"><span class="av av-amber av-sm" aria-hidden="true">🐶</span><span>Dog</span></a>
+    </nav>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <noscript><p class="noscript">Trick Deck needs JavaScript to run the clicker and keep score.</p></noscript>
+</body>
+</html>
