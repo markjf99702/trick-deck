@@ -1,6 +1,6 @@
 # Trick Deck
 
-**Use it: [junkdrawer.works/trick-deck](https://junkdrawer.works/trick-deck/)**
+**Use it: [trick-deck.junkdrawer.works](https://trick-deck.junkdrawer.works/)**
 
 **Teach your dog a new trick, five tries at a time.** Trick Deck is a clicker, a coach and a scorecard in your pocket. It has 48 tricks with step-by-step plans, a coach that tells you when to move on, and a trick show that deals from the tricks your dog knows.
 
@@ -58,5 +58,7 @@ To put it online with GitHub Pages: **Settings → Pages → Build and deploymen
 - `js/app.js`: routing and most pages. `js/train.js` has the training screen and the free clicker, and `js/show.js` has the trick show.
 - `js/ui.js`: the card face, avatars and small shared pieces. `js/store.js` saves and restores. `js/sample.js` makes Biscuit.
 - `fonts/`: Fredoka and Figtree, both under the SIL Open Font License, served from here so nothing loads from elsewhere.
+- `dogs.html`: hands your dogs to [While You Were Out](https://junkdrawer.works/while-you-were-out/), which loads it in a hidden frame to bring a dog in with the words it knows. It answers only junkdrawer.works.
+- `carry.js`: the first time Trick Deck opens at trick-deck.junkdrawer.works, brings your dogs from its old address, junkdrawer.works/trick-deck/.
 
 Trick Deck is for tricks and manners. If a dog is fearful, aggressive or suddenly behaving differently, talk to a vet and a certified trainer or veterinary behaviorist.

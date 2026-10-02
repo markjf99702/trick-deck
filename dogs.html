@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Trick Deck</title>
+<p>Nothing to see here. This page hands Trick Deck's dogs to While You Were Out.</p>
+<script>
+// While You Were Out (junkdrawer.works/while-you-were-out/) can bring a dog in from Trick Deck with the words it
+// knows. The two used to share junkdrawer.works, and so its storage. Trick Deck has its own address now, so While
+// You Were Out loads this page in a hidden frame and asks, and this answers with what Trick Deck has saved here
+// (or null). It answers only junkdrawer.works.
+addEventListener('message', e => {
+  if (e.origin !== 'https://junkdrawer.works' || !e.data || e.data.trickdeck !== 'please') return;
+  let saved = null;
+  try { saved = localStorage.getItem('trickdeck.v1'); } catch { /* storage blocked */ }
+  e.source.postMessage({ trickdeck: saved }, e.origin);
+});
+</script>
+</html>
