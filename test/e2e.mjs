@@ -223,6 +223,34 @@ try {
     await p.context().close();
   });
 
+  await check('a quick double tap only arms Delete and Erase everything', async () => {
+    const p = await fresh();
+    const dogs = () => p.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')).dogs.length);
+    await go('', p);
+    await p.click('#trySample');
+    await go('#/dog/edit', p);
+    await p.dblclick('#dDelete');
+    assert.match(p.url(), /#\/dog\/edit$/, 'a double click only asks');
+    assert.ok(await p.isVisible('#deleteNote'));
+    await p.waitForTimeout(700);
+    await p.click('#dDelete');
+    await p.waitForURL(/#\/welcome$/);
+    await p.click('#trySample');
+    await go('#/settings', p);
+    await p.evaluate(() => new Promise(done => { // two taps a quarter of a second apart
+      const b = document.getElementById('wipe');
+      b.click();
+      setTimeout(() => { b.click(); done(); }, 250);
+    }));
+    assert.match(p.url(), /#\/settings$/, 'a double tap only asks');
+    assert.equal(await dogs(), 1);
+    await p.waitForTimeout(700);
+    await p.click('#wipe');
+    await p.waitForURL(/#\/welcome$/);
+    assert.equal(await dogs(), 0);
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {

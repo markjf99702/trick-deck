@@ -611,8 +611,7 @@ function dogEdit(mode) {
     }
     if (e.target.id === 'dNoPhoto') { delete dog.photo; preview(); }
     if (e.target.id === 'dDelete') {
-      const note = document.getElementById('deleteNote');
-      if (note.hidden) { note.hidden = false; e.target.textContent = `Yes, delete ${dog.name}`; return; }
+      if (!tappedAgain(e.target, document.getElementById('deleteNote'), `Yes, delete ${dog.name}`)) return;
       removeDog(dog.id);
       toast(`${dog.name} deleted.`);
       location.hash = S.dogs.length ? '#/dog' : '#/welcome';
@@ -669,6 +668,18 @@ async function shrinkPhoto(file) {
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+// "Tap again to …" buttons. The first tap shows the warning and says yes on the button; the second does it.
+// A second tap within 600 ms is the rest of a double tap, not an answer, so it does nothing.
+function tappedAgain(btn, note, yes) {
+  if (note.hidden) {
+    note.hidden = false;
+    btn.textContent = yes;
+    btn.dataset.asked = Date.now();
+    return false;
+  }
+  return Date.now() - Number(btn.dataset.asked) >= 600;
 }
 
 function removeDog(id) {
@@ -834,8 +845,7 @@ function settings() {
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     }
     if (e.target.id === 'wipe') {
-      const note = document.getElementById('wipeNote');
-      if (note.hidden) { note.hidden = false; e.target.textContent = 'Yes, erase everything'; return; }
+      if (!tappedAgain(e.target, document.getElementById('wipeNote'), 'Yes, erase everything')) return;
       Object.assign(S, defaults());
       ctx.persist();
       location.hash = '#/welcome';
