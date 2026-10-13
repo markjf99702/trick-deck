@@ -942,6 +942,7 @@ window.addEventListener('pagehide', () => ctx.persist());
 route();
 
 // Offline support is optional, and some embedded frames refuse service workers outright.
+// A secure context is https, or localhost while working on it, so the tests can check it offline.
 try {
-  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').catch(() => {});
 } catch { /* not allowed here */ }

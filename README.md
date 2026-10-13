@@ -48,6 +48,8 @@ node tools/screenshots.mjs    # redraws docs/*.png and og.png from the sample do
 node tools/make-icons.mjs     # redraws the PNG icons from icon.svg
 ```
 
+On localhost it installs its offline copy too, and that service worker stays with the address after you stop the server. Before serving another project on the same port, unregister it in the browser's developer tools (Application → Service workers).
+
 To put it online with GitHub Pages: **Settings → Pages → Build and deployment → Deploy from a branch**, then pick the branch and `/ (root)`.
 
 ### Files

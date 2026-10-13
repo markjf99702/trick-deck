@@ -34,6 +34,7 @@ const errors = [];
 const watch = p => {
   p.on('pageerror', e => errors.push(e.message));
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  p.on('request', r => { if (!r.url().startsWith(base)) errors.push('left the site: ' + r.url()); });
 };
 watch(page);
 
@@ -492,7 +493,21 @@ try {
     await p.context().close();
   });
 
-  assert.deepEqual(errors, [], 'no errors in the console');
+  await check('it works offline once it has been opened', async () => {
+    const p = await fresh({ serviceWorkers: 'allow' });
+    await addDog(p, 'Pepper', ['sit', 'down']);
+    await p.waitForFunction(() => navigator.serviceWorker?.controller, null, { timeout: 15000 });
+    await p.context().setOffline(true);
+    await p.reload();
+    await p.waitForSelector('.hello h1');
+    assert.equal(await text('.hello h1', p), 'Pepper');
+    const failed = await p.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.status === 'error').map(f => f.family); });
+    assert.deepEqual(failed, [], 'the fonts come from the offline copy too');
+    await p.context().setOffline(false);
+    await p.context().close();
+  });
+
+  assert.deepEqual(errors, [], 'no errors in the console, and nothing loaded from anywhere else');
   console.log('\nall good');
 } finally {
   await browser.close();
