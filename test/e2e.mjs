@@ -292,6 +292,27 @@ try {
     await p.context().close();
   });
 
+  await check('switching lb and kg keeps the weight', async () => {
+    const p = await fresh(); // en-US, so pounds
+    await go('', p);
+    await p.click('#trySample'); // Biscuit, 11 kg
+    const needs = async () => (await text('#app', p)).match(/needs about (\d+) kcal/)[1];
+    await go('#/dog', p);
+    const before = await needs();
+    await go('#/dog/edit', p);
+    assert.equal(await p.inputValue('#dWeight'), '24.3');
+    await p.selectOption('#dUnits', 'kg');
+    assert.equal(await p.inputValue('#dWeight'), '11');
+    await p.click('button[type=submit]');
+    await p.waitForURL(/#\/dog$/);
+    assert.equal(await needs(), before, 'same dog, same calories');
+    await go('#/dog/edit', p);
+    await p.fill('#dWeight', '30'); // typed first: the number means what the menu says next
+    await p.selectOption('#dUnits', 'lb');
+    assert.equal(await p.inputValue('#dWeight'), '30');
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {

@@ -527,7 +527,8 @@ function dogEdit(mode) {
   const isNew = mode === 'new';
   const dog = isNew ? { id: newId(), name: '', emoji: '🐶', color: DOG_COLORS[S.dogs.length % DOG_COLORS.length], stage: 'adult', treat: 'small' } : { ...ctx.dog() };
   const units = S.settings.units;
-  const weight = dog.kg ? Math.round((units === 'lb' ? C.lbFromKg(dog.kg) : dog.kg) * 10) / 10 : '';
+  const weightIn = unit => dog.kg ? Math.round((unit === 'lb' ? C.lbFromKg(dog.kg) : dog.kg) * 10) / 10 : '';
+  let typed = false; // has the weight box been typed in, or does it still show the saved weight?
   title(isNew ? 'Add a dog' : `Edit ${dog.name}`);
 
   app.innerHTML = `
@@ -559,7 +560,7 @@ function dogEdit(mode) {
       <div class="field two">
         <div>
           <label for="dWeight">Weight</label>
-          <div class="with-unit"><input id="dWeight" name="weight" inputmode="decimal" value="${weight}" placeholder="optional">
+          <div class="with-unit"><input id="dWeight" name="weight" inputmode="decimal" value="${weightIn(units)}" placeholder="optional">
           <select id="dUnits" aria-label="Units"><option value="lb" ${units === 'lb' ? 'selected' : ''}>lb</option><option value="kg" ${units === 'kg' ? 'selected' : ''}>kg</option></select></div>
         </div>
         <div>
@@ -617,7 +618,10 @@ function dogEdit(mode) {
       location.hash = S.dogs.length ? '#/dog' : '#/welcome';
     }
   };
+  app.oninput = e => { if (e.target.id === 'dWeight') typed = true; };
   app.onchange = async e => {
+    // The other unit shows the same weight. A number someone typed is left as it is: they may be fixing the unit.
+    if (e.target.id === 'dUnits' && !typed) document.getElementById('dWeight').value = weightIn(e.target.value);
     if (e.target.id === 'dTreat') document.getElementById('customWrap').hidden = e.target.value !== 'custom';
     if (e.target.id === 'dPhoto' && e.target.files[0]) {
       try {
