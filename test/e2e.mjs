@@ -528,6 +528,16 @@ try {
     await p.context().close();
   });
 
+  await check('Erase everything is a button, not a bar', async () => {
+    const p = await fresh();
+    await go('', p);
+    await p.click('#trySample');
+    await go('#/settings', p);
+    const { width } = await p.locator('#wipe').boundingBox();
+    assert.ok(width < 250, `Erase everything is ${Math.round(width)}px wide`);
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console, and nothing loaded from anywhere else');
   console.log('\nall good');
 } finally {

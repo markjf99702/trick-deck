@@ -300,6 +300,7 @@ a.card:hover { transform: translateY(-3px) rotate(-.6deg); }
 .facts dt { font-size: .75rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .facts dd { margin: 0; font: 600 1.2rem/1.3 var(--display); font-variant-numeric: tabular-nums; }
 .block { display: grid; gap: .8rem; }
+.block > .btn { justify-self: start; } /* a button keeps its own width, like Erase everything */
 .block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
 .more { display: inline-flex; align-items: center; font-weight: 700; text-decoration: none; }
 
