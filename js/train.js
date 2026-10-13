@@ -138,7 +138,8 @@ export function trainView(ctx, app, id) {
     const v = T.verdict;
     const s = t.steps;
     if (v.verdict === 'push' && v.done) {
-      if (practice) return `<div class="verdict push"><span class="v-tag">Push</span><p>5 for 5 on the cue. Nice and sharp.</p></div>`;
+      // Practicing, or it went in the deck earlier in this session.
+      if (practice || T.celebrated) return `<div class="verdict push"><span class="v-tag">Push</span><p>5 for 5 on the cue. Nice and sharp.</p></div>`;
       return `<div class="verdict push"><span class="v-tag">Push</span><p>5 for 5 on the last step. ${esc(dog.name)} has ${esc(t.name)} on cue.</p>
         <div class="v-actions"><button class="btn primary sm" data-act="learned">Add it to the deck</button><button class="btn sm" data-act="dismiss">Keep practicing</button></div></div>`;
     }

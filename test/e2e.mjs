@@ -62,6 +62,16 @@ async function addDog(p, name, knows = []) {
   await p.waitForURL(knows.length ? /#\/$/ : /#\/trick\/charge$/);
 }
 
+// Straight to Spin's last step, five clicks, and Add it to the deck: the celebration sheet is up.
+async function learnSpin(p) {
+  await go('#/trick/spin', p);
+  await p.click('[data-act="step"][data-i="4"]');
+  await go('#/train/spin', p);
+  for (let i = 0; i < 5; i++) await p.click('#tBall');
+  await p.click('[data-act="learned"]');
+  await p.waitForSelector('#tSheet .party');
+}
+
 try {
   await step('first visit asks who we are training', async () => {
     await go('');
@@ -408,6 +418,18 @@ try {
       setTimeout(() => { document.querySelector('.ans-first').click(); done(); }, 80);
     }));
     assert.match(await text('.deal-count', p), /Card 2 of 5/, 'the second tap doesn’t answer a card nobody has seen');
+    await p.context().close();
+  });
+
+  await check('after Keep practicing, 5 for 5 doesn’t add the card again', async () => {
+    const p = await fresh();
+    await addDog(p, 'Rex', ['sit']);
+    await learnSpin(p);
+    assert.match(await text('#tSheet h2', p), /Rex knows Spin!/);
+    await p.click('#tSheet [data-act="close"]');
+    await tapBall(5, p);
+    assert.match(await text('.verdict', p), /5 for 5 on the cue/);
+    assert.equal(await p.locator('[data-act="learned"]').count(), 0, 'Spin is already in the deck');
     await p.context().close();
   });
 
