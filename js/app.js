@@ -472,7 +472,7 @@ function allowance(dog) {
   const budget = daily * 0.1;
   return `<p>${esc(dog.name)} needs about <b>${Math.round(daily)} kcal</b> a day (${esc(stage.label.toLowerCase())}), so treats should stay under <b>${Math.round(budget)} kcal</b>.
     ${dog.treat === 'kibble' ? 'You’re training with kibble from their meals, which adds nothing as long as it comes out of dinner.'
-      : `At ${per} kcal a treat that’s about <b>${Math.floor(budget / per)} treats</b> a day.`}</p>
+      : per > 0 ? `At ${per} kcal a treat that’s about <b>${Math.floor(budget / per)} treats</b> a day.` : ''}</p>
     <p class="fine">Resting energy is 70 × weight in kg<sup>0.75</sup>, times a factor for age and activity. It’s a starting point, and your vet knows your dog better.</p>`;
 }
 
@@ -639,11 +639,16 @@ function dogEdit(mode) {
     if (document.getElementById('dWeight').value && !(w > 0 && w < (unit === 'lb' ? 400 : 180))) {
       err.textContent = `Weight should be a number of ${unit === 'lb' ? 'pounds' : 'kilograms'}, like ${unit === 'lb' ? '24' : '11'}.`; err.hidden = false; return;
     }
+    const treat = document.getElementById('dTreat').value;
+    const kcal = parseFloat(String(document.getElementById('dKcal').value).replace(',', '.'));
+    if (treat === 'custom' && !(Number.isFinite(kcal) && kcal >= 0)) {
+      err.textContent = 'Calories per treat should be a number, like 4.'; err.hidden = false; document.getElementById('dKcal').focus(); return;
+    }
     dog.name = name;
     dog.kg = w > 0 ? (unit === 'lb' ? C.kgFromLb(w) : w) : undefined;
     dog.stage = document.getElementById('dStage').value;
-    dog.treat = document.getElementById('dTreat').value;
-    dog.treatKcal = dog.treat === 'custom' ? parseFloat(String(document.getElementById('dKcal').value).replace(',', '.')) || 0 : undefined;
+    dog.treat = treat;
+    dog.treatKcal = treat === 'custom' ? kcal : undefined;
     S.settings.units = unit;
     const i = S.dogs.findIndex(d => d.id === dog.id);
     if (i >= 0) S.dogs[i] = dog; else S.dogs.push(dog);

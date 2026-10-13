@@ -268,6 +268,30 @@ try {
     }
   });
 
+  await check('a custom treat needs a calorie count', async () => {
+    const p = await fresh();
+    await go('', p);
+    await p.click('#trySample');
+    await go('#/dog/edit', p);
+    await p.selectOption('#dTreat', 'custom');
+    for (const junk of ['', 'abc', '-5']) {
+      await p.fill('#dKcal', junk);
+      await p.click('button[type=submit]');
+      assert.match(p.url(), /#\/dog\/edit$/, `"${junk}" isn’t saved`);
+      assert.match(await text('#formError', p), /Calories per treat should be a number/);
+    }
+    await p.fill('#dKcal', '0'); // a toy or praise: nothing to count
+    await p.click('button[type=submit]');
+    await p.waitForURL(/#\/dog$/);
+    assert.doesNotMatch(await text('#app', p), /Infinity/);
+    await go('#/dog/edit', p);
+    await p.fill('#dKcal', '4');
+    await p.click('button[type=submit]');
+    await p.waitForURL(/#\/dog$/);
+    assert.match(await text('#app', p), /At 4 kcal a treat that’s about \d+ treats a day/);
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {
