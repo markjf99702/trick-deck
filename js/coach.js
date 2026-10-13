@@ -26,6 +26,13 @@ export function entry(prog, id) {
   return (prog && prog[id]) || { status: 'new', step: 0 };
 }
 
+// The step a trick is on, kept within its steps. A save from when the trick had more steps, or a
+// hand-edited backup, can hold one past the end; the saved number is left as it is.
+export function stepOf(trick, e) {
+  const n = Math.floor(Number(e?.step)) || 0;
+  return Math.min(Math.max(n, 0), trick.steps.length - 1);
+}
+
 export const isKnown = e => e.status === 'known' || e.status === 'solid';
 
 export function knownCount(prog) {

@@ -32,6 +32,8 @@ export function showView(ctx, app) {
   document.title = 'Trick show · Trick Deck';
 
   const cueFor = t => (t.id === 'name' ? dog.name : t.cue?.word || t.name);
+  // Cards per show: a number or 'all'. Anything else in a save (a broken backup) means the usual 5.
+  const round = () => { const r = S.settings.round; return r === 'all' || (Number.isInteger(r) && r > 0) ? r : 5; };
   const say = text => {
     if (!S.settings.voice || !('speechSynthesis' in window)) return;
     try {
@@ -60,7 +62,8 @@ export function showView(ctx, app) {
       .filter(x => x.rel.total)
       .sort((a, b) => a.rel.first / a.rel.total - b.rel.first / b.rel.total);
     const sizes = [5, 10].filter(n => n < pool.length);
-    const size = S.settings.round === 'all' || !sizes.includes(S.settings.round) ? 'all' : S.settings.round;
+    const r = round();
+    const size = r === 'all' || !sizes.includes(r) ? 'all' : r;
 
     app.innerHTML = `
       <header class="page-head">
@@ -90,7 +93,8 @@ export function showView(ctx, app) {
 
   function deal() {
     const pool = showPool(ctx);
-    const size = S.settings.round === 'all' ? pool.length : Math.min(pool.length, S.settings.round || 5);
+    const r = round();
+    const size = r === 'all' ? pool.length : Math.min(pool.length, r);
     R = { cards: shuffle(pool).slice(0, size), i: 0, results: [], start: Date.now() };
     paintCard();
   }

@@ -456,6 +456,30 @@ try {
     await p.context().close();
   });
 
+  await check('a saved step past the end of a trick still shows', async () => {
+    const p = await fresh();
+    // Saved by a version of Spin with more steps (or a hand-edited backup), with a show size that isn't one.
+    await p.addInitScript(saved => { if (!localStorage.getItem('trickdeck.v1')) localStorage.setItem('trickdeck.v1', saved); }, JSON.stringify({
+      v: 1, dog: 'd1', dogs: [{ id: 'd1', name: 'Pepper', emoji: '🐶', color: 'amber', stage: 'adult', treat: 'small' }],
+      prog: { d1: { charge: { status: 'known', step: 0 }, sit: { status: 'known', step: 0 }, down: { status: 'known', step: 0 }, spin: { status: 'learning', step: 7 } } },
+      sessions: [], settings: { round: 'abc' },
+    }));
+    await go('', p);
+    assert.equal(await p.locator('.hello h1').count(), 1, 'Today shows');
+    assert.match(await text('.rows', p), /Step 5 of 5/);
+    await go('#/trick/spin', p);
+    assert.match(await text('.status', p), /step 5 of 5/);
+    await go('#/deck', p);
+    assert.match(await p.getAttribute('.card[href="#/trick/spin"] .c-bar', 'title'), /Step 5 of 5/);
+    await go('#/train/spin', p);
+    assert.match(await text('.t-stepnav', p), /Step 5 of 5/);
+    await go('#/show', p);
+    await p.click('#showVoice');
+    await p.click('[data-act="deal"]');
+    assert.match(await text('.deal-count', p), /Card 1 of 2/);
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {

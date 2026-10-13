@@ -74,7 +74,7 @@ export function trainView(ctx, app, id) {
   const practice = C.isKnown(e);
   if (e.status === 'new') e.step = 0;
   const T = {
-    step: practice ? t.steps.length - 1 : Math.min(e.step, t.steps.length - 1),
+    step: practice ? t.steps.length - 1 : C.stepOf(t, e),
     from: 0, set: [], last: null, verdict: null, hits: 0, misses: 0,
     sets: 0, begun: 0, ended: false, nudged: 0, history: [], celebrated: false,
   };

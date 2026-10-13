@@ -150,12 +150,11 @@ function home() {
 }
 
 function progressRow(t, prog) {
-  const e = C.entry(prog, t.id);
-  const step = t.steps[e.step];
+  const at = C.stepOf(t, C.entry(prog, t.id));
   return `<li class="row s-${t.suit}">
     <a class="row-main" href="#/trick/${t.id}">
       <span class="mini" aria-hidden="true">${t.emoji}</span>
-      <span class="row-text"><b>${esc(t.name)}</b><small>Step ${e.step + 1} of ${t.steps.length}: ${esc(step.do)}</small></span>
+      <span class="row-text"><b>${esc(t.name)}</b><small>Step ${at + 1} of ${t.steps.length}: ${esc(t.steps[at].do)}</small></span>
     </a>
     <a class="btn sm" href="#/train/${t.id}">Train</a>
   </li>`;
@@ -260,6 +259,7 @@ function trickPage(id) {
   const dog = ctx.dog();
   const prog = ctx.prog();
   const e = C.entry(prog, t.id);
+  const at = C.stepOf(t, e);
   const suit = suitOf(t);
   const missing = C.missingNeeds(t, prog);
   const learning = e.status === 'new' || e.status === 'learning';
@@ -268,8 +268,8 @@ function trickPage(id) {
   const status = {
     new: `<p class="status">Not started.${missing.length ? ` Easier once ${esc(dog.name)} knows ${missing.map(n => esc(BY_ID[n].name)).join(' and ')}.` : ''}</p>
       <div class="actions"><a class="btn primary" href="#/train/${t.id}">${icon('play', 16)}Start step 1</a><button class="btn" data-act="know">Already knows it</button></div>`,
-    learning: `<p class="status">Learning: step ${e.step + 1} of ${t.steps.length}.</p>
-      <div class="actions"><a class="btn primary" href="#/train/${t.id}">${icon('play', 16)}Train step ${e.step + 1}</a><button class="btn" data-act="know">Already knows it</button></div>`,
+    learning: `<p class="status">Learning: step ${at + 1} of ${t.steps.length}.</p>
+      <div class="actions"><a class="btn primary" href="#/train/${t.id}">${icon('play', 16)}Train step ${at + 1}</a><button class="btn" data-act="know">Already knows it</button></div>`,
     known: `<p class="status">On cue${e.since ? ` since ${esc(when(e.since))}` : ''}. Proof it below to make it solid.</p>
       <div class="actions"><a class="btn primary" href="#/train/${t.id}">${icon('play', 16)}Practice</a><button class="btn" data-act="relearn">Back to learning</button></div>`,
     solid: `<p class="status">Solid. It works anywhere.</p>
@@ -277,7 +277,7 @@ function trickPage(id) {
   }[e.status];
 
   const steps = t.steps.map((s, i) => {
-    const state = C.isKnown(e) || i < e.step ? 'done' : (e.status === 'learning' && i === e.step) ? 'now' : 'todo';
+    const state = C.isKnown(e) || i < at ? 'done' : (e.status === 'learning' && i === at) ? 'now' : 'todo';
     return `<li class="step ${state}">
       <span class="step-n" aria-hidden="true">${state === 'done' ? icon('check', 16) : i + 1}</span>
       <div class="step-body">

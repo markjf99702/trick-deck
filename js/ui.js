@@ -1,7 +1,7 @@
 // Small shared pieces of the page: escaping, the card face, avatars, glyphs.
 
 import { suitOf, LEVELS } from './tricks.js';
-import { entry, isKnown, missingNeeds } from './coach.js';
+import { entry, isKnown, missingNeeds, stepOf } from './coach.js';
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -54,8 +54,9 @@ export function card(t, prog, { href = true, big = false, cls = '' } = {}) {
   const later = e.status === 'new' && missingNeeds(t, prog).length > 0;
   const stamp = e.status === 'solid' ? `<span class="stamp solid" title="Solid">★</span>`
     : e.status === 'known' ? `<span class="stamp known" title="On cue">✓</span>` : '';
+  const at = stepOf(t, e);
   const bar = e.status === 'learning'
-    ? `<span class="c-bar" title="Step ${e.step + 1} of ${t.steps.length}"><i style="width:${Math.round(100 * e.step / t.steps.length)}%"></i></span>` : '';
+    ? `<span class="c-bar" title="Step ${at + 1} of ${t.steps.length}"><i style="width:${Math.round(100 * at / t.steps.length)}%"></i></span>` : '';
   const label = `${t.name}, card ${t.n}, ${suitOf(t).name}, ${LEVELS[t.level]}${statusWords(t, e)}`;
   const tag = href ? 'a' : 'div';
   return `<${tag} class="card s-${t.suit} st-${e.status}${later ? ' later' : ''}${big ? ' big' : ''} ${cls}"${href ? ` href="#/trick/${t.id}"` : ''} aria-label="${esc(label)}">
@@ -69,7 +70,7 @@ export function card(t, prog, { href = true, big = false, cls = '' } = {}) {
 function statusWords(t, e) {
   if (e.status === 'solid') return ', solid';
   if (e.status === 'known') return ', on cue';
-  if (e.status === 'learning') return `, learning, step ${e.step + 1} of ${t.steps.length}`;
+  if (e.status === 'learning') return `, learning, step ${stepOf(t, e) + 1} of ${t.steps.length}`;
   return '';
 }
 

@@ -40,6 +40,15 @@ test('titles', () => {
   assert.equal(C.titleFor(TRICKS.length).next, null);
 });
 
+test('a saved step is read within the trick’s steps', () => {
+  const spin = BY_ID.spin; // five steps
+  assert.equal(C.stepOf(spin, { step: 2 }), 2);
+  assert.equal(C.stepOf(spin, { step: 7 }), 4, 'saved when the trick had more steps');
+  assert.equal(C.stepOf(spin, { step: -1 }), 0);
+  assert.equal(C.stepOf(spin, { step: 'two' }), 0);
+  assert.equal(C.stepOf(spin, {}), 0);
+});
+
 test('proofing: held positions need duration, moves do not', () => {
   assert.equal(C.proofItems(BY_ID.sit).length, 4);
   assert.equal(C.proofItems(BY_ID.spin).length, 3);
