@@ -251,6 +251,23 @@ try {
     await p.context().close();
   });
 
+  await check('every deck filter fits on a phone', async () => {
+    for (const width of [360, 390]) {
+      const p = await fresh({ viewport: { width, height: 800 } });
+      await go('', p);
+      await p.click('#trySample');
+      await go('#/deck', p);
+      for (const chip of await p.locator('[data-filter]').all()) {
+        const b = await chip.boundingBox();
+        assert.ok(b.x >= 0 && b.x + b.width <= width, `${await chip.textContent()} is at ${Math.round(b.x)}–${Math.round(b.x + b.width)} in a ${width}px window`);
+      }
+      await p.click('[data-filter="known"]');
+      const b = await p.locator('[data-filter][aria-checked="true"]').boundingBox();
+      assert.ok(b.x >= 0 && b.x + b.width <= width, 'the picked filter is in view');
+      await p.context().close();
+    }
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {

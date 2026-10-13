@@ -239,7 +239,7 @@ function deck() {
       <h1>The deck</h1>
       <p>Card 0 and four suits of 12. ${esc(dog.name)} has ${count} on cue. Faded cards build on a trick ${esc(dog.name)} doesn’t know yet, but you can start any of them.</p>
     </header>
-    <div class="chips" role="radiogroup" aria-label="Show">
+    <div class="chips wrap" role="radiogroup" aria-label="Show">
       ${FILTERS.map(x => `<button role="radio" aria-checked="${x.id === f.id}" data-filter="${x.id}">${esc(x.name)}<span>${TRICKS.filter(t => x.test(t, C.entry(prog, t.id), prog)).length}</span></button>`).join('')}
     </div>
     ${body || `<p class="empty">No cards here yet.</p>`}
