@@ -519,6 +519,15 @@ try {
     await p.context().close();
   });
 
+  await check('without JavaScript the message comes first', async () => {
+    const p = await fresh({ javaScriptEnabled: false });
+    await go('', p);
+    const note = await p.locator('.noscript').boundingBox();
+    const foot = await p.locator('.jd-foot').boundingBox();
+    assert.ok(note.y < foot.y, `the message is at ${Math.round(note.y)}px, under the footer at ${Math.round(foot.y)}px`);
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console, and nothing loaded from anywhere else');
   console.log('\nall good');
 } finally {
