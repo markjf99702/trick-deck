@@ -137,6 +137,7 @@ try {
     await page.click('[data-act="deal"]');
     for (let i = 0; i < 3; i++) {
       await page.waitForSelector('.flip.flipped');
+      await page.waitForTimeout(600); // give the cue, watch the dog
       await page.click('[data-r="first"]');
     }
     assert.match(await text('.show-done h1'), /3 of 3 on the first try/);
@@ -391,6 +392,23 @@ try {
       }
       await p.context().close();
     }
+  });
+
+  await check('a double tap in the show answers one card', async () => {
+    const p = await fresh();
+    await go('', p);
+    await p.click('#trySample');
+    await go('#/show', p);
+    await p.click('#showVoice');
+    await p.click('[data-act="deal"]');
+    await p.waitForSelector('.flip.flipped');
+    await p.waitForTimeout(800);
+    await p.evaluate(() => new Promise(done => { // two taps 80 ms apart, where First try is
+      document.querySelector('.ans-first').click();
+      setTimeout(() => { document.querySelector('.ans-first').click(); done(); }, 80);
+    }));
+    assert.match(await text('.deal-count', p), /Card 2 of 5/, 'the second tap doesn’t answer a card nobody has seen');
+    await p.context().close();
   });
 
   assert.deepEqual(errors, [], 'no errors in the console');

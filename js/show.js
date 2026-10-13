@@ -113,6 +113,7 @@ export function showView(ctx, app) {
         </div>
         <button type="button" class="linkbtn" data-act="stop">End the show</button>
       </div>`;
+    R.shownAt = Date.now();
     const flip = document.getElementById('flip');
     requestAnimationFrame(() => requestAnimationFrame(() => flip.classList.add('flipped')));
     say(`${cueFor(t)}!`);
@@ -174,7 +175,12 @@ export function showView(ctx, app) {
       return;
     }
     const r = ev.target.closest('[data-r]');
-    if (r && R) { answer(r.dataset.r); return; }
+    if (r && R) {
+      // The next card's answers come up where the last ones were, so the second tap of a double tap would
+      // answer a card nobody has seen. Nobody gives a cue and watches the dog in half a second.
+      if (Date.now() - R.shownAt >= 500) answer(r.dataset.r);
+      return;
+    }
     const b = ev.target.closest('[data-act]');
     if (!b) return;
     if (b.dataset.act === 'deal') deal();
