@@ -507,6 +507,18 @@ try {
     await p.context().close();
   });
 
+  await check('printing leaves out the bar and the footer', async () => {
+    const p = await fresh({ viewport: { width: 1280, height: 800 } });
+    await go('', p);
+    await p.click('#trySample');
+    await go('#/trick/rollover', p);
+    await p.emulateMedia({ media: 'print' });
+    for (const sel of ['.bar', '.jd-foot', '#toast']) {
+      assert.equal(await p.locator(sel).evaluate(el => getComputedStyle(el).display), 'none', `${sel} prints`);
+    }
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console, and nothing loaded from anywhere else');
   console.log('\nall good');
 } finally {
