@@ -185,6 +185,10 @@ export function trainView(ctx, app, id) {
   function goStep(to) {
     T.step = Math.max(0, Math.min(t.steps.length - 1, to));
     if (!practice) { e.step = T.step; if (e.status === 'new') e.status = 'learning'; ctx.persist(); }
+    // A new step starts a new set of five, and Undo stays on this step.
+    // The tries so far still count toward the session: those treats were given.
+    T.set = [];
+    T.history = [];
     T.verdict = null;
     paintStep();
     paintSet();

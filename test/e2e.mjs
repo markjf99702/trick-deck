@@ -1,5 +1,7 @@
 // Drives the real page in Chromium, from first visit to a trick show:  node test/e2e.mjs
 // Starts its own static server. Needs Playwright (npm i -g playwright, or a local install).
+// The story follows one dog from start to finish. The checks after it stand alone, each in a browser of its own.
+// ONLY=pattern runs just the standalone checks whose names match, and skips the story.
 
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
@@ -29,13 +31,36 @@ const browser = await pw.chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
 const page = await ctx.newPage();
 const errors = [];
-page.on('pageerror', e => errors.push(e.message));
-page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+const watch = p => {
+  p.on('pageerror', e => errors.push(e.message));
+  p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+};
+watch(page);
 
-const text = async sel => (await page.locator(sel).first().textContent()).replace(/\s+/g, ' ').trim();
-const go = async hash => { await page.goto(base + hash); await page.waitForTimeout(120); };
-const step = (name, fn) => fn().then(() => console.log('ok  ', name), e => { console.log('FAIL', name); throw e; });
-const tapBall = async n => { for (let i = 0; i < n; i++) await page.tap('#tBall'); };
+const text = async (sel, p = page) => (await p.locator(sel).first().textContent()).replace(/\s+/g, ' ').trim();
+const go = async (hash, p = page) => { await p.goto(base + hash); await p.waitForTimeout(120); };
+const tapBall = async (n, p = page) => { for (let i = 0; i < n; i++) await p.tap('#tBall'); };
+const run = (name, fn) => fn().then(() => console.log('ok  ', name), e => { console.log('FAIL', name); throw e; });
+const only = process.env.ONLY && new RegExp(process.env.ONLY, 'i');
+const step = (name, fn) => (only ? Promise.resolve() : run(name, fn));
+const check = (name, fn) => (only && !only.test(name) ? Promise.resolve() : run(name, fn));
+
+// A browser of its own, for a check that stands alone.
+async function fresh(options = {}) {
+  const c = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, locale: 'en-US', serviceWorkers: 'block', ...options });
+  const p = await c.newPage();
+  watch(p);
+  return p;
+}
+
+// A new dog through the welcome form, already knowing the given tricks.
+async function addDog(p, name, knows = []) {
+  await go('', p);
+  await p.fill('#wName', name);
+  for (const id of knows) await p.click(`[data-starter="${id}"]`);
+  await p.click('button[type=submit]');
+  await p.waitForURL(knows.length ? /#\/$/ : /#\/trick\/charge$/);
+}
 
 try {
   await step('first visit asks who we are training', async () => {
@@ -175,6 +200,27 @@ try {
       const [sw, cw] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
       assert.ok(sw <= cw, `${hash || 'today'} is ${sw}px wide in a ${cw}px window`);
     }
+  });
+
+  await check('a new step starts a new set of five', async () => {
+    const p = await fresh();
+    await addDog(p, 'Pepper', ['sit']);
+    await go('#/train/spin', p);
+    await tapBall(3, p);
+    await p.click('[data-act="next"]');
+    assert.match(await text('.t-stepnav', p), /Step 2 of 5/);
+    assert.equal(await p.locator('.dot.hit, .dot.miss').count(), 0, 'tries on step 1 are not part of the set on step 2');
+    assert.ok(await p.locator('#tUndo').isDisabled(), 'undo stays on this step');
+    await tapBall(4, p);
+    assert.equal(await p.locator('.verdict').count(), 0, 'four tries on step 2 are not a set yet');
+    await tapBall(1, p);
+    assert.match(await text('.verdict', p), /5 for 5/);
+    await p.click('[data-act="go"]');
+    assert.ok(await p.locator('#tUndo').isDisabled(), 'undo can’t reach back to step 2');
+    await tapBall(1, p);
+    assert.equal(await p.locator('.dot.hit').count(), 1);
+    assert.match(await text('#tCount', p), /^9 clicks/, 'every try still counts toward the session');
+    await p.context().close();
   });
 
   assert.deepEqual(errors, [], 'no errors in the console');
