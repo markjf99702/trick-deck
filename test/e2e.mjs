@@ -480,6 +480,18 @@ try {
     await p.context().close();
   });
 
+  await check('card 0 doesn’t send you to a trick show', async () => {
+    const p = await fresh();
+    await go('', p);
+    await p.click('#trySample');
+    await go('#/trick/leave', p); // on cue, never in a show yet
+    assert.match(await text('.trick', p), /Deal it in a trick show/);
+    await go('#/trick/charge', p);
+    assert.match(await text('.trick', p), /Make it solid/);
+    assert.doesNotMatch(await text('.trick', p), /trick show/i, 'card 0 is never dealt');
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {

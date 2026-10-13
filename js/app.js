@@ -298,7 +298,8 @@ function trickPage(id) {
         ${C.proofItems(t).map(p => `<li><label><input type="checkbox" id="proof-${p.id}" data-proof="${p.id}" ${e.proof?.[p.id] ? 'checked' : ''}>
           <span><b>${esc(p.label)}</b><small>${esc(p.about)}</small></span></label></li>`).join('')}
       </ul>
-      <p class="fine">${rel.total ? `In trick shows: first try ${rel.first} of the last ${rel.total} times.` : `Deal it in a <a href="#/show">trick show</a> to see how often it works on the first try.`}</p>
+      ${t.id === 'charge' ? '' /* no cue, so it's never dealt in a show */
+        : `<p class="fine">${rel.total ? `In trick shows: first try ${rel.first} of the last ${rel.total} times.` : `Deal it in a <a href="#/show">trick show</a> to see how often it works on the first try.`}</p>`}
     </section>` : '';
 
   app.innerHTML = `
