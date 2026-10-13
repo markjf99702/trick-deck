@@ -21,7 +21,7 @@ const server = createServer(async (req, res) => {
   res.end(body);
 }).listen(0);
 const base = `http://localhost:${server.address().port}/`;
-const SEED = 3; // the show deals Spin first, as the README says; change it to deal another card
+const SEED = 13; // the show deals Spin first, as the README says; change it to deal another card
 const seeded = seed => {
   let a = seed; // mulberry32
   Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -52,6 +52,9 @@ await phone([
   ['phone-show.png', async p => {
     await p.goto(base + '#/show');
     await p.click('#showVoice');
+    // Seed again just before the deal. The taps in training made the click sound's noise with Math.random, one
+    // number per sample, and computers play sound at different sample rates, so another one would deal another card.
+    await p.evaluate(seeded, SEED);
     await p.click('[data-act="deal"]');
   }],
   ['phone-trick.png', p => p.goto(base + '#/trick/rollover')],
