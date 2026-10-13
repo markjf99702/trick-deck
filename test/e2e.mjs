@@ -313,6 +313,47 @@ try {
     await p.context().close();
   });
 
+  await check('long names wrap instead of pushing the page sideways', async () => {
+    const p = await fresh({ viewport: { width: 320, height: 640 } });
+    const fits = async where => {
+      const [sw, cw] = await p.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+      assert.ok(sw <= cw, `${where} is ${sw}px wide in a ${cw}px window`);
+    };
+    await go('', p);
+    await fits('the welcome page at 320');
+    await p.setViewportSize({ width: 360, height: 740 });
+    await addDog(p, 'Wolfeschlegelsteinhausenberger', ['sit']);
+    await go('#/trick/name', p);
+    await p.click('[data-act="know"]'); // two on cue, so the show deals the name
+    await go('#/dog/new', p);
+    await p.fill('#dName', 'Princess Buttercup Fluffington');
+    await p.click('button[type=submit]');
+    await p.waitForURL(/#\/$/);
+    for (const dog of ['Princess', 'Wolfe']) {
+      if (dog === 'Wolfe') {
+        await go('#/dog', p);
+        await p.click('.dog-chip');
+        await p.waitForTimeout(150);
+      }
+      for (const hash of ['', '#/trick/name', '#/show', '#/dog', '#/settings', '#/dog/edit']) {
+        await go(hash, p);
+        await fits(`${dog}: ${hash || 'today'}`);
+      }
+      await p.click('#dDelete');
+      await fits(`${dog}: the delete question`);
+    }
+    await go('#/show', p);
+    await p.click('#showVoice');
+    await p.click('[data-act="deal"]');
+    for (let i = 0; i < 2; i++) {
+      await p.waitForSelector('.flip.flipped');
+      await fits(`the show calling ${await text('.call', p)}`);
+      await p.waitForTimeout(600);
+      await p.click('[data-r="first"]');
+    }
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {

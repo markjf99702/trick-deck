@@ -120,6 +120,8 @@ img { max-width: 100%; }
 [hidden] { display: none !important; }
 h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.12; text-wrap: balance; margin: 0; }
 h1 { font-size: clamp(1.9rem, 5.5vw, 2.5rem); letter-spacing: -.01em; }
+/* Where a dog's name shows, a long one breaks onto the next line instead of pushing the page sideways. */
+h1, .back, .row-text b, .cue-word, .call, .dog-chip { overflow-wrap: anywhere; }
 h2 { font-size: 1.3rem; }
 h3 { font-size: 1.05rem; }
 p { margin: 0; }
@@ -511,6 +513,7 @@ a.card:hover { transform: translateY(-3px) rotate(-.6deg); }
 /* The dog */
 .dog-head { display: flex; gap: 1.2rem; align-items: center; }
 .dog-head > div { display: grid; gap: .5rem; min-width: 0; }
+.dog-head .btn, .danger .btn { white-space: normal; overflow-wrap: anywhere; text-align: center; }
 .switch { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .dog-chip { display: inline-flex; align-items: center; gap: .4rem; min-height: 38px; padding: 0 .8rem 0 .35rem; border-radius: 99px; border: 1.5px solid var(--line-2); background: var(--surface); font-weight: 700; cursor: pointer; }
 .suit-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -587,7 +590,7 @@ input[type="range"] { width: 100%; max-width: 340px; accent-color: var(--primary
 .welcome h1 { max-width: 18ch; font-size: clamp(2rem, 6.5vw, 2.9rem); }
 .welcome .lede { max-width: 50ch; }
 .fan { display: flex; justify-content: center; padding: .6rem 0 .4rem; }
-.fan .card { width: 112px; margin: 0 -6px; }
+.fan .card { width: min(112px, 30vw); margin: 0 -6px; }
 .fan .card:nth-child(1) { transform: rotate(-11deg) translateY(10px); }
 .fan .card:nth-child(2) { z-index: 1; transform: translateY(-4px); }
 .fan .card:nth-child(3) { transform: rotate(11deg) translateY(10px); }
