@@ -5,15 +5,15 @@
 **Teach your dog a new trick, five tries at a time.** Trick Deck is a clicker, a coach and a scorecard in your pocket. It has 48 tricks with step-by-step plans, a coach that tells you when to move on, and a trick show that deals from the tricks your dog knows.
 
 <p align="center">
-  <img src="docs/phone-today.png" alt="Today: Biscuit is a Trickster with 11 of 49 tricks on cue, three tricks in progress, and the next cards to learn" width="250">
+  <img src="docs/phone-today.png" alt="Today: Biscuit is a Trickster with 11 of 49 tricks on cue and a four-day streak, with Roll over, Stay, Go to your bed and High five in progress" width="250">
   &nbsp;
   <img src="docs/phone-train.png" alt="Training Roll over, step 3 of 5: five green checks and the coach saying push on to step 4, above a big tennis-ball clicker" width="250">
   &nbsp;
-  <img src="docs/phone-show.png" alt="A trick show: the Touch card dealt face up, with First try, With help and Not today buttons" width="250">
+  <img src="docs/phone-show.png" alt="A trick show: the Spin card dealt face up, with First try, With help and Not today buttons" width="250">
 </p>
 
 <p align="center">
-  <img src="docs/deck.png" alt="The deck on a laptop: card 0, then the Manners suit with Sit and Down stamped solid and others checked on cue" width="820">
+  <img src="docs/deck.png" alt="The deck on a laptop: card 0, then the Manners suit with Sit, Down and Touch stamped solid and the others Biscuit knows checked on cue" width="820">
 </p>
 
 <sub>Screenshots use Biscuit, the sample dog with six weeks of made-up training.</sub>
@@ -32,7 +32,7 @@ Clicker training marks the exact moment your dog gets something right. The click
 - **Titles.** New recruit, Good dog, Quick study, Clever dog, Trickster, Show dog, Headliner, Star of the show, and Legend for the whole deck.
 - **Treat math.** Training treats count toward the day's food. Add your dog's weight and life stage, and Trick Deck works out daily calories (70 × kg<sup>0.75</sup> × a life-stage factor) and keeps treats under the usual 10% allowance. If you train with kibble from their meals, there's nothing extra to count.
 - **Short sessions.** A session timer nudges you at three minutes and again at five. The screen stays on while you train, where the browser allows it.
-- **History.** Streaks, a 12-week calendar of training days, and a log of every session.
+- **History.** Streaks, a 12-week calendar of training days, and a log of recent sessions.
 - **More than one dog**, each with their own deck.
 - No account and no server. Everything stays in your browser. You can save a backup file and restore it on another phone. It works offline and installs to a phone's home screen.
 
@@ -60,6 +60,7 @@ To put it online with GitHub Pages: **Settings → Pages → Build and deploymen
 - `js/app.js`: routing and most pages. `js/train.js` has the training screen and the free clicker, and `js/show.js` has the trick show.
 - `js/ui.js`: the card face, avatars and small shared pieces. `js/store.js` saves and restores. `js/sample.js` makes Biscuit.
 - `fonts/`: Fredoka and Figtree, both under the SIL Open Font License, served from here so nothing loads from elsewhere.
+- `sw.js`: keeps an offline copy of the app, so the clicker works at the park with no signal. When a file is added or removed, update its list and the number in its cache name.
 - `dogs.html`: hands your dogs to [While You Were Out](https://junkdrawer.works/while-you-were-out/), which loads it in a hidden frame to bring a dog in with the words it knows. It answers only junkdrawer.works.
 - `carry.js`: the first time Trick Deck opens at trick-deck.junkdrawer.works, brings your dogs from its old address, junkdrawer.works/trick-deck/.
 

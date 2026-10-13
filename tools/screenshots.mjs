@@ -1,5 +1,6 @@
 // Renders the README screenshots (docs/*.png) and the link preview (og.png)
 // from the sample dog:  node tools/screenshots.mjs
+// Math.random is seeded, so the same pictures come out every time (apart from the dates).
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -20,10 +21,16 @@ const server = createServer(async (req, res) => {
   res.end(body);
 }).listen(0);
 const base = `http://localhost:${server.address().port}/`;
+const SEED = 3; // the show deals Spin first, as the README says; change it to deal another card
+const seeded = seed => {
+  let a = seed; // mulberry32
+  Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+};
 const browser = await pw.chromium.launch();
 
 async function phone(shots) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, serviceWorkers: 'block' });
+  await ctx.addInitScript(seeded, SEED);
   const page = await ctx.newPage();
   await page.goto(base);
   await page.click('#trySample');
@@ -52,7 +59,8 @@ await phone([
 
 // The deck on a laptop.
 {
-  const ctx = await browser.newContext({ viewport: { width: 1180, height: 900 }, deviceScaleFactor: 1.5 });
+  const ctx = await browser.newContext({ viewport: { width: 1180, height: 900 }, deviceScaleFactor: 1.5, serviceWorkers: 'block' });
+  await ctx.addInitScript(seeded, SEED);
   const page = await ctx.newPage();
   await page.goto(base);
   await page.click('#trySample');
@@ -64,7 +72,7 @@ await phone([
 
 // The link preview: a hand of cards and the name.
 {
-  const ctx = await browser.newContext({ viewport: { width: 1200, height: 630 } });
+  const ctx = await browser.newContext({ viewport: { width: 1200, height: 630 }, serviceWorkers: 'block' });
   const page = await ctx.newPage();
   await page.goto(base + 'index.html#/help');
   const css = await readFile(join(root, 'css/app.css'), 'utf8');
