@@ -24,8 +24,10 @@
   --ribbon-deep: #16309e;
   --good: #1d8a4e;
   --good-tint: #e2f3e7;
+  --on-good: #ffffff;
   --warn: #a86400;
   --warn-tint: #fbeed6;
+  --on-warn: #ffffff;
   --bad: #c2362b;
   --bad-tint: #fbe3e0;
   --gold: #e8b923;
@@ -35,6 +37,7 @@
   --moves: #0e8f73;
   --helpers: #b0409a;
   --start: #172036;
+  --on-start: #ffffff;
   --manners-text: #1f5fd1;
   --poses-text: #b4501a;
   --moves-text: #0b7862;
@@ -68,9 +71,9 @@
     --link: #93b1ff; --primary: #eef1f7; --on-primary: #121622;
     --ball-shadow: #7d9110; --ball-tint: #2a3121;
     --ribbon: #5b7bff; --ribbon-deep: #3553d6;
-    --good: #4cc27a; --good-tint: #173326; --warn: #f0a33a; --warn-tint: #3a2c15; --bad: #ff7a6b; --bad-tint: #3d1f1f;
+    --good: #4cc27a; --good-tint: #173326; --on-good: #121622; --warn: #f0a33a; --warn-tint: #3a2c15; --on-warn: #121622; --bad: #ff7a6b; --bad-tint: #3d1f1f;
     --gold: #f0c53c;
-    --manners: #588af2; --poses: #dc6e33; --moves: #17a683; --helpers: #cc55b0; --start: #d9ef3f;
+    --manners: #588af2; --poses: #dc6e33; --moves: #17a683; --helpers: #cc55b0; --start: #d9ef3f; --on-start: #172036;
     --manners-text: #8fb2ff; --poses-text: #f2a070; --moves-text: #5fd3b3; --helpers-text: #e79ad5; --start-text: #d9ef3f;
     --heat-0: #252b3a; --heat-1: #1f4a33; --heat-2: #2c7148; --heat-3: #43a063; --heat-4: #7fd18f;
     --card-edge: #333b4e; --back: #0b0f19; --scrim: rgba(0, 0, 0, .6);
@@ -85,9 +88,9 @@
   --link: #93b1ff; --primary: #eef1f7; --on-primary: #121622;
   --ball-shadow: #7d9110; --ball-tint: #2a3121;
   --ribbon: #5b7bff; --ribbon-deep: #3553d6;
-  --good: #4cc27a; --good-tint: #173326; --warn: #f0a33a; --warn-tint: #3a2c15; --bad: #ff7a6b; --bad-tint: #3d1f1f;
+  --good: #4cc27a; --good-tint: #173326; --on-good: #121622; --warn: #f0a33a; --warn-tint: #3a2c15; --on-warn: #121622; --bad: #ff7a6b; --bad-tint: #3d1f1f;
   --gold: #f0c53c;
-  --manners: #588af2; --poses: #dc6e33; --moves: #17a683; --helpers: #cc55b0; --start: #d9ef3f;
+  --manners: #588af2; --poses: #dc6e33; --moves: #17a683; --helpers: #cc55b0; --start: #d9ef3f; --on-start: #172036;
   --manners-text: #8fb2ff; --poses-text: #f2a070; --moves-text: #5fd3b3; --helpers-text: #e79ad5; --start-text: #d9ef3f;
   --heat-0: #252b3a; --heat-1: #1f4a33; --heat-2: #2c7148; --heat-3: #43a063; --heat-4: #7fd18f;
   --card-edge: #333b4e; --back: #0b0f19; --scrim: rgba(0, 0, 0, .6);
@@ -96,12 +99,12 @@
   color-scheme: dark;
 }
 
-/* Suits set the colors their cards and rows use. */
-.s-start { --suit: var(--start); --suit-text: var(--start-text); }
-.s-manners { --suit: var(--manners); --suit-text: var(--manners-text); }
-.s-poses { --suit: var(--poses); --suit-text: var(--poses-text); }
-.s-moves { --suit: var(--moves); --suit-text: var(--moves-text); }
-.s-helpers { --suit: var(--helpers); --suit-text: var(--helpers-text); }
+/* Suits set the colors their cards and rows use. --on-suit is for marks drawn on the suit color. */
+.s-start { --suit: var(--start); --suit-text: var(--start-text); --on-suit: var(--on-start); }
+.s-manners { --suit: var(--manners); --suit-text: var(--manners-text); --on-suit: #fff; }
+.s-poses { --suit: var(--poses); --suit-text: var(--poses-text); --on-suit: #fff; }
+.s-moves { --suit: var(--moves); --suit-text: var(--moves-text); --on-suit: #fff; }
+.s-helpers { --suit: var(--helpers); --suit-text: var(--helpers-text); --on-suit: #fff; }
 .s-start, .s-manners, .s-poses, .s-moves, .s-helpers { --suit-tint: color-mix(in srgb, var(--suit) 13%, var(--surface)); }
 
 /* Base */
@@ -274,7 +277,7 @@ a.card:hover { transform: translateY(-3px) rotate(-.6deg); }
 .stamp {
   position: absolute; top: -4cqi; right: -4cqi; width: 23cqi; height: 23cqi; border-radius: 50%;
   display: grid; place-items: center; font: 700 13cqi/1 var(--display);
-  background: var(--suit); color: #fff; box-shadow: 0 0 0 1.4cqi var(--card-bg); transform: rotate(-12deg);
+  background: var(--suit); color: var(--on-suit, #fff); box-shadow: 0 0 0 1.4cqi var(--card-bg); transform: rotate(-12deg);
 }
 .stamp.solid { background: var(--gold); color: var(--on-gold); }
 .card.later .c-art > span { filter: grayscale(1); opacity: .42; }
@@ -355,7 +358,7 @@ a.card:hover { transform: translateY(-3px) rotate(-.6deg); }
 .step { display: grid; grid-template-columns: 34px 1fr; gap: .85rem; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
 .step.now { border-color: var(--suit); box-shadow: inset 0 0 0 1px var(--suit); }
 .step-n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 600 1rem var(--display); background: var(--suit-tint); color: var(--suit-text); }
-.step.done .step-n { background: var(--suit); color: #fff; }
+.step.done .step-n { background: var(--suit); color: var(--on-suit, #fff); }
 .step-body { display: grid; gap: .35rem; min-width: 0; }
 .step-body h3 { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .here { font: 700 .7rem/1 var(--body); letter-spacing: .06em; text-transform: uppercase; padding: .35em .65em; border-radius: 99px; background: var(--ball); color: var(--on-ball); }
@@ -393,7 +396,7 @@ a.card:hover { transform: translateY(-3px) rotate(-.6deg); }
 .t-dots { display: flex; justify-content: center; gap: 10px; }
 .dot { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2px dashed var(--line-2); color: #fff; }
 .dot.next { border: 2px solid var(--ink); }
-.dot.hit { border: 0; background: var(--good); }
+.dot.hit { border: 0; background: var(--good); color: var(--on-good); }
 .dot.miss { border: 0; background: var(--line); color: var(--muted); }
 .t-verdict { min-height: 4.6rem; display: grid; align-content: start; }
 .t-hint { text-align: center; color: var(--muted); font-size: .92rem; padding-top: .2rem; }
@@ -402,8 +405,8 @@ a.card:hover { transform: translateY(-3px) rotate(-.6deg); }
 .verdict.push { background: var(--good-tint); border-color: transparent; }
 .verdict.drop { background: var(--warn-tint); border-color: transparent; }
 .v-tag { justify-self: start; font: 700 .72rem/1 var(--body); letter-spacing: .08em; text-transform: uppercase; padding: .35em .6em; border-radius: 6px; background: var(--surface); color: var(--ink); }
-.push .v-tag { background: var(--good); color: #fff; }
-.drop .v-tag { background: var(--warn); color: #fff; }
+.push .v-tag { background: var(--good); color: var(--on-good); }
+.drop .v-tag { background: var(--warn); color: var(--on-warn); }
 .v-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .t-pad { margin-top: auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding-top: 6px; }
 .t-side {
@@ -499,7 +502,7 @@ a.card:hover { transform: translateY(-3px) rotate(-.6deg); }
 .signal { color: var(--muted); min-height: 1.5em; }
 .answers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
 .ans { min-height: 58px; display: flex; align-items: center; justify-content: center; gap: .3rem; padding: 0 .4rem; border-radius: 14px; border: 1.5px solid var(--line-2); background: var(--surface); font-weight: 700; cursor: pointer; touch-action: manipulation; }
-.ans-first { background: var(--good); border-color: var(--good); color: #fff; }
+.ans-first { background: var(--good); border-color: var(--good); color: var(--on-good); }
 .ans-miss { color: var(--bad); }
 .show-done { display: grid; gap: 1rem; }
 .res { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }

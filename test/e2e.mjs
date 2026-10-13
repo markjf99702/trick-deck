@@ -354,6 +354,45 @@ try {
     await p.context().close();
   });
 
+  await check('text on the bright fills is readable in dark mode', async () => {
+    // WCAG contrast between an element's text color and its own background.
+    const contrast = (p, sel) => p.locator(sel).first().evaluate(el => {
+      const lum = css => {
+        const [r, g, b] = css.match(/[\d.]+/g).slice(0, 3).map(v => (v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const s = getComputedStyle(el);
+      const [hi, lo] = [lum(s.color), lum(s.backgroundColor)].sort((a, b) => b - a);
+      return (hi + 0.05) / (lo + 0.05);
+    });
+    for (const colorScheme of ['dark', 'light']) {
+      const p = await fresh({ colorScheme });
+      const readable = async (sel, what) => {
+        const ratio = await contrast(p, sel);
+        assert.ok(ratio >= 4.5, `${colorScheme}: ${what} is ${ratio.toFixed(2)}:1`);
+      };
+      await go('', p);
+      await p.click('#trySample');
+      await go('#/trick/charge', p);
+      await readable('.trick-hero .stamp', 'card 0’s on-cue check');
+      await readable('.step.done .step-n', 'card 0’s finished steps');
+      if (colorScheme === 'dark') {
+        await go('#/train/rollover', p);
+        await tapBall(5, p);
+        await readable('.push .v-tag', 'the Push tag');
+        await readable('.dot.hit', 'a hit in the set');
+        await p.click('[data-act="dismiss"]');
+        for (let i = 0; i < 5; i++) await p.click('[data-act="miss"]');
+        await readable('.drop .v-tag', 'the Drop tag');
+        await go('#/show', p);
+        await p.click('#showVoice');
+        await p.click('[data-act="deal"]');
+        await readable('.ans-first', 'First try');
+      }
+      await p.context().close();
+    }
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {
