@@ -11,8 +11,8 @@ const NUDGES = [
 ];
 
 // The tennis ball button. Sound on press, and on release for the box clicker.
-// Space or Enter works too, unless another button has focus.
-function bindBall(btn, ctx, onClick) {
+// Space or Enter works too, unless another button has focus or the ball is paused.
+function bindBall(btn, ctx, onClick, paused = () => false) {
   let down = false;
   const st = () => ctx.S.settings;
   const start = () => {
@@ -40,7 +40,7 @@ function bindBall(btn, ctx, onClick) {
   btn.addEventListener('contextmenu', e => e.preventDefault());
   const isKey = e => e.code === 'Space' || e.code === 'Enter' || e.key === ' ';
   const kd = e => {
-    if (!isKey(e) || e.repeat) return;
+    if (!isKey(e) || e.repeat || paused()) return;
     const el = e.target;
     if (el !== btn && el.closest && el.closest('button, a, input, select, textarea, summary, label')) return;
     e.preventDefault();
@@ -274,12 +274,24 @@ export function trainView(ctx, app, id) {
       </div>`, true);
   }
 
+  // While a sheet is up, the screen behind it is out of reach, for the keyboard too.
+  const cover = on => { for (const el of $('.train').children) if (el.id !== 'tSheet') el.inert = on; };
+
   function sheet(html, party = false) {
     const el = $('#tSheet');
     el.innerHTML = `<div class="sheet-card${party ? ' party' : ''}" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">${html}</div>`;
     el.querySelector('h2').id = 'sheetTitle';
     el.hidden = false;
+    cover(true);
     el.querySelector('.btn')?.focus();
+  }
+
+  function keepPracticing() {
+    $('#tSheet').hidden = true;
+    cover(false);
+    T.verdict = null;
+    paintSet();
+    $('#tBall').focus({ preventScroll: true });
   }
 
   app.onclick = ev => {
@@ -293,13 +305,17 @@ export function trainView(ctx, app, id) {
     else if (act === 'go') goStep(Number(b.dataset.to));
     else if (act === 'dismiss') { T.verdict = null; paintSet(); }
     else if (act === 'learned') celebrate();
-    else if (act === 'close') { $('#tSheet').hidden = true; T.verdict = null; paintSet(); }
+    else if (act === 'close') keepPracticing();
     else if (act === 'end') summary();
   };
 
-  const unbind = bindBall($('#tBall'), ctx, () => rep(true));
+  const unbind = bindBall($('#tBall'), ctx, () => rep(true), () => !$('#tSheet').hidden);
   const keys = ev => {
-    if (ev.target.closest?.('input, select, textarea') || !$('#tSheet').hidden) return;
+    if (!$('#tSheet').hidden) {
+      if (ev.key === 'Escape' && $('#tSheet [data-act="close"]')) keepPracticing();
+      return;
+    }
+    if (ev.target.closest?.('input, select, textarea')) return;
     if (ev.key === 'm' || ev.key === 'M') rep(false);
     else if (ev.key === 'z' || ev.key === 'Z' || ev.key === 'Backspace') undo();
   };

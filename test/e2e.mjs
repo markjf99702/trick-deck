@@ -433,6 +433,29 @@ try {
     await p.context().close();
   });
 
+  await check('a sheet over the training screen keeps the keyboard', async () => {
+    const p = await fresh({ viewport: { width: 1280, height: 800 }, hasTouch: false });
+    await addDog(p, 'Rex', ['sit']);
+    await learnSpin(p);
+    const count = () => text('#tCount', p);
+    const before = await count();
+    await p.click('#tSheet h2'); // focus goes to the page, not a button
+    await p.keyboard.press('Space');
+    assert.equal(await count(), before, 'Space doesn’t click the ball behind the sheet');
+    const behind = () => p.evaluate(() => !!document.activeElement?.closest('.train') && !document.activeElement.closest('#tSheet'));
+    await p.focus('#tSheet .btn');
+    for (const key of ['Shift+Tab', 'Shift+Tab', 'Shift+Tab', 'Tab', 'Tab', 'Tab', 'Tab']) {
+      await p.keyboard.press(key);
+      assert.equal(await behind(), false, `${key} reaches the screen behind the sheet`);
+    }
+    await p.keyboard.press('Escape');
+    assert.equal(await p.getAttribute('#tSheet', 'hidden'), '', 'Escape is Keep practicing');
+    assert.equal(await p.evaluate(() => document.activeElement.id), 'tBall', 'back on the ball');
+    await p.keyboard.press('Space');
+    assert.notEqual(await count(), before, 'the ball clicks again');
+    await p.context().close();
+  });
+
   assert.deepEqual(errors, [], 'no errors in the console');
   console.log('\nall good');
 } finally {
