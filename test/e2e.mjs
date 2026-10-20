@@ -366,7 +366,7 @@ try {
     await p.context().close();
   });
 
-  await check('text on the bright fills is readable in dark mode', async () => {
+  await check('text on the bright fills is readable in light and dark mode', async () => {
     // WCAG contrast between an element's text color and its own background.
     const contrast = (p, sel) => p.locator(sel).first().evaluate(el => {
       const lum = css => {
@@ -388,19 +388,25 @@ try {
       await go('#/trick/charge', p);
       await readable('.trick-hero .stamp', 'card 0’s on-cue check');
       await readable('.step.done .step-n', 'card 0’s finished steps');
-      if (colorScheme === 'dark') {
-        await go('#/train/rollover', p);
-        await tapBall(5, p);
-        await readable('.push .v-tag', 'the Push tag');
-        await readable('.dot.hit', 'a hit in the set');
-        await p.click('[data-act="dismiss"]');
-        for (let i = 0; i < 5; i++) await p.click('[data-act="miss"]');
-        await readable('.drop .v-tag', 'the Drop tag');
-        await go('#/show', p);
-        await p.click('#showVoice');
-        await p.click('[data-act="deal"]');
-        await readable('.ans-first', 'First try');
+      await go('#/train/rollover', p);
+      await tapBall(5, p);
+      await readable('.push .v-tag', 'the Push tag');
+      await readable('.dot.hit', 'a hit in the set');
+      await p.click('[data-act="dismiss"]');
+      for (let i = 0; i < 5; i++) await p.click('[data-act="miss"]');
+      await readable('.drop .v-tag', 'the Drop tag');
+      await go('#/show', p);
+      await p.click('#showVoice');
+      await p.click('[data-act="deal"]');
+      await readable('.ans-first', 'First try');
+      for (const r of ['first', 'help', 'miss']) {
+        await p.waitForTimeout(600); // give the cue, watch the dog
+        await p.click(`[data-r="${r}"]`);
       }
+      await p.click('[data-act="stop"]');
+      await readable('.res-first', 'a first try in the results');
+      await readable('.res-help', 'a needed-help in the results');
+      await readable('.res-miss', 'a not-today in the results');
       await p.context().close();
     }
   });
