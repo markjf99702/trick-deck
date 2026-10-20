@@ -53,7 +53,7 @@ export function showView(ctx, app) {
         <header class="page-head"><h1>Trick show</h1></header>
         <div class="show-empty">
           <div class="pile" aria-hidden="true"><span class="card-back"></span><span class="card-back"></span></div>
-          <p>A trick show deals from the tricks ${esc(dog.name)} knows. It needs at least two on cue, and ${esc(dog.name)} has ${pool.length}.</p>
+          <p>A trick show deals from the tricks ${esc(dog.name)} knows. It needs at least two on cue, and ${esc(dog.name)} has ${pool.length} besides card 0.</p>
           <a class="btn primary" href="#/deck">Find a trick to learn</a>
         </div>`;
       return;

@@ -143,7 +143,7 @@ function home() {
 
     <section class="quick">
       <a class="quick-btn" href="#/clicker">${icon('clicker', 26)}<span><b>Clicker</b><small>Catch good behavior as it happens</small></span></a>
-      <a class="quick-btn" href="#/show">${icon('show', 26)}<span><b>Trick show</b><small>${pool.length >= 2 ? `Deal from the ${pool.length} tricks ${esc(dog.name)} knows` : 'Unlocks at 2 tricks on cue'}</small></span></a>
+      <a class="quick-btn" href="#/show">${icon('show', 26)}<span><b>Trick show</b><small>${pool.length >= 2 ? `Deal from the ${pool.length} tricks ${esc(dog.name)} knows` : 'Unlocks at 2 tricks on cue, besides card 0'}</small></span></a>
     </section>
   `;
   bindSample();
