@@ -287,6 +287,52 @@ try {
     await p.context().close();
   });
 
+  await check('an older tab closing doesn’t undo a newer tab’s training', async () => {
+    const p = await fresh();
+    await addDog(p, 'Pepper', ['sit']);
+    const b = await p.context().newPage(); // opened later, while the first is still on Today
+    watch(b);
+    await go('#/train/spin', b);
+    await tapBall(5, b);
+    await b.click('[data-act="go"]');
+    await tapBall(3, b);
+    await b.click('[data-act="end"]');
+    await p.close({ runBeforeUnload: true });
+    await b.waitForTimeout(300);
+    const s = await b.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')));
+    assert.equal(s.sessions.filter(x => x.kind === 'train').length, 1, 'the training session');
+    assert.equal(s.prog[s.dog].spin?.step, 1, 'Spin on step 2');
+    await b.context().close();
+  });
+
+  await check('another tab’s saves show up here, without ending a session', async () => {
+    const p = await fresh(); // the installed app, say
+    await addDog(p, 'Pepper', ['sit']);
+    const b = await p.context().newPage(); // and a browser tab
+    watch(b);
+    await go('#/train/spin', p);
+    await tapBall(3, p);
+    await go('#/trick/down', b);
+    await b.click('[data-act="know"]');
+    await go('#/clicker', b);
+    await b.tap('#fBall');
+    await b.tap('#fBall');
+    await b.click('[data-act="save"]');
+    await go('', b);
+    assert.equal(await p.getAttribute('#tSheet', 'hidden'), '', 'training carries on');
+    assert.match(await text('.t-hint', p), /3 of 5 in this set/);
+    await tapBall(2, p);
+    assert.match(await text('.verdict', p), /5 for 5/);
+    await b.waitForFunction(() => /Spin/.test(document.querySelector('.rows')?.textContent || ''), null, { timeout: 5000 })
+      .catch(() => assert.fail('Today in the other tab doesn’t show Spin under Keep going'));
+    await p.click('[data-act="end"]');
+    const s = await p.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')));
+    assert.equal(s.prog[s.dog].down.status, 'known', 'Down, from the other tab');
+    assert.deepEqual(s.sessions.map(x => x.kind).sort(), ['free', 'train']);
+    assert.equal(s.prog[s.dog].spin.reps, 5);
+    await p.context().close();
+  });
+
   await check('a quick double tap only arms Delete and Erase everything', async () => {
     const p = await fresh();
     const dogs = () => p.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')).dogs.length);

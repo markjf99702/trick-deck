@@ -1,6 +1,6 @@
 import { TRICKS, BY_ID, SUITS, LEVELS, METHODS, suitOf } from './tricks.js';
 import * as C from './coach.js';
-import { load, save, backup, restore, newId, defaults } from './store.js';
+import { KEY, read, parse, save, merge, backup, restore, newId, defaults } from './store.js';
 import { sampleDog } from './sample.js';
 import { SOUNDS, press, release, unlock } from './clicker.js';
 import { esc, card, avatar, glyph, icon, rosette, toast, when, plural, DOG_COLORS, DOG_EMOJI } from './ui.js';
@@ -8,7 +8,9 @@ import { trainView, clickerView } from './train.js';
 import { showView, showPool } from './show.js';
 
 const app = document.getElementById('app');
-const S = load();
+let seen = read();            // what storage held when this tab last read or saved it
+const S = parse(seen);
+let base = JSON.stringify(S); // the same, as this tab understood it: S differs from it where this tab changed something
 let warned = false;
 
 // Shared with the training and show screens.
@@ -29,8 +31,25 @@ export const ctx = {
     const key = C.dayKey(Date.now());
     return ctx.sessions().filter(s => s.kind !== 'show' && C.dayKey(s.start) === key).reduce((n, s) => n + (s.hits || 0), 0);
   },
+  // Brings in whatever another tab (or the installed app) saved since this tab last looked, keeping this tab's
+  // own changes. True if there was anything.
+  sync() {
+    const raw = read();
+    if (raw === seen) return false;
+    const theirs = parse(raw);
+    const clean = JSON.stringify(S) === base;
+    merge(S, JSON.parse(base), theirs);
+    seen = raw;
+    base = clean ? JSON.stringify(S) : JSON.stringify(theirs);
+    return true;
+  },
   persist() {
-    if (!save(S) && !warned) {
+    ctx.sync(); // so an older tab adds its change to what's newest instead of saving over it
+    const raw = save(S);
+    if (raw) {
+      seen = raw;
+      base = raw;
+    } else if (!warned) {
       warned = true;
       toast('This browser isn’t letting Trick Deck save. Progress will be lost when you close the page.');
     }
@@ -40,6 +59,7 @@ export const ctx = {
 // Routing -------------------------------------------------------------------
 
 let cleanup = null;
+let current = null;
 const ROUTES = [
   [/^$/, home, 'home'],
   [/^deck$/, deck, 'deck'],
@@ -55,8 +75,10 @@ const ROUTES = [
 ];
 const OPEN = new Set(['help', 'welcome']); // pages that work before there's a dog
 
-function route() {
+// again: painting the same page over with another tab's changes, so stay where you were on it.
+function route(again = false) {
   if (cleanup) { try { cleanup(); } catch (err) { console.error(err); } cleanup = null; }
+  if (!again) ctx.sync();
   app.onclick = app.onchange = app.oninput = app.onsubmit = null;
   const path = location.hash.replace(/^#\/?/, '');
   let match = null;
@@ -69,9 +91,21 @@ function route() {
   document.body.dataset.view = match.tab;
   document.body.classList.toggle('no-dog', !ctx.dog());
   paintTabs(match.tab);
+  const y = again ? window.scrollY : 0;
+  current = match;
   cleanup = match.view(...match.args) || null;
-  window.scrollTo(0, 0);
+  window.scrollTo(0, y);
+  if (again) return;
   app.focus({ preventScroll: true });
+}
+
+// After another tab saves, pages that only show what's saved are painted again. Training, the clicker, a show
+// and the forms are left alone: painting them would end the session or lose what's typed, and they already
+// work on the merged progress.
+const REPAINT = new Set([home, deck, trickPage, dogPage, help]);
+function refresh() {
+  if (REPAINT.has(current?.view)) route(true);
+  else if (ctx.dog()) paintTabs(current?.tab);
 }
 
 function paintTabs(tab) {
@@ -937,8 +971,16 @@ function help() {
 
 // Start ---------------------------------------------------------------------
 
-window.addEventListener('hashchange', route);
-window.addEventListener('pagehide', () => ctx.persist());
+window.addEventListener('hashchange', () => route());
+// Save on the way out only when this tab changed something; an older tab has nothing to add.
+window.addEventListener('pagehide', () => { if (JSON.stringify(S) !== base) ctx.persist(); });
+// Keep in step with other tabs and the installed app: when one saves, and when this one comes back into view.
+window.addEventListener('storage', e => { if ((e.key === KEY || e.key === null) && ctx.sync()) refresh(); });
+const back = () => { if (document.visibilityState === 'visible' && ctx.sync()) refresh(); };
+document.addEventListener('visibilitychange', back);
+window.addEventListener('pageshow', e => { if (e.persisted) back(); });
+// And just before any tap, change or form that might edit something, so the edit applies to what's newest.
+for (const type of ['click', 'change', 'submit']) document.addEventListener(type, () => ctx.sync(), true);
 route();
 
 // Offline support is optional, and some embedded frames refuse service workers outright.
