@@ -41,6 +41,13 @@ watch(page);
 const text = async (sel, p = page) => (await p.locator(sel).first().textContent()).replace(/\s+/g, ' ').trim();
 const go = async (hash, p = page) => { await p.goto(base + hash); await p.waitForTimeout(120); };
 const tapBall = async (n, p = page) => { for (let i = 0; i < n; i++) await p.tap('#tBall'); };
+const saved = p => p.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')));
+// The page as if hidden (the phone locked, another app opened) or shown again.
+const setHidden = (p, hidden) => p.evaluate(h => {
+  Object.defineProperty(document, 'visibilityState', { value: h ? 'hidden' : 'visible', configurable: true });
+  Object.defineProperty(document, 'hidden', { value: h, configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
+}, hidden);
 const run = (name, fn) => fn().then(() => console.log('ok  ', name), e => { console.log('FAIL', name); throw e; });
 const only = process.env.ONLY && new RegExp(process.env.ONLY, 'i');
 const step = (name, fn) => (only ? Promise.resolve() : run(name, fn));
@@ -330,6 +337,99 @@ try {
     assert.equal(s.prog[s.dog].down.status, 'known', 'Down, from the other tab');
     assert.deepEqual(s.sessions.map(x => x.kind).sort(), ['free', 'train']);
     assert.equal(s.prog[s.dog].spin.reps, 5);
+    await p.context().close();
+  });
+
+  await check('leaving without End keeps the session so far', async () => {
+    const p = await fresh();
+    await addDog(p, 'Pepper', ['sit', 'down', 'shake']);
+    await go('#/train/spin', p);
+    await tapBall(3, p);
+    await p.click('[data-act="miss"]');
+    const q = await p.context().newPage();
+    watch(q);
+    await p.close({ runBeforeUnload: true }); // the tab closed in the middle of a set
+    await go('', q);
+    let s = await saved(q);
+    const train = s.sessions.filter(x => x.kind === 'train');
+    assert.equal(train.length, 1, 'the training session');
+    assert.deepEqual([train[0].hits, train[0].misses], [3, 1]);
+    const spin = s.prog[s.dog].spin;
+    assert.deepEqual([spin.reps, spin.hits, spin.sessions], [4, 3, 1]);
+    await go('#/clicker', q);
+    await q.tap('#fBall');
+    await q.tap('#fBall');
+    await setHidden(q, true); // the phone locked
+    s = await saved(q);
+    assert.equal(s.sessions.find(x => x.kind === 'free')?.hits, 2, 'the clicker session');
+    await setHidden(q, false);
+    await go('#/show', q);
+    await q.click('#showVoice');
+    await q.click('[data-act="deal"]'); // three cards
+    for (const r of ['first', 'help']) {
+      await q.waitForTimeout(600);
+      await q.click(`[data-r="${r}"]`);
+    }
+    await setHidden(q, true);
+    s = await saved(q);
+    const show = s.sessions.find(x => x.kind === 'show');
+    assert.deepEqual([show?.hits, show?.misses], [1, 1], 'the show so far');
+    assert.equal(s.sessions.filter(x => x.kind === 'free').length, 1, 'the clicker session once');
+    await q.context().close();
+  });
+
+  await check('back within ten minutes, it’s the same session, counted once', async () => {
+    const p = await fresh();
+    const t0 = new Date('2026-10-13T18:00:00').getTime();
+    await p.clock.install({ time: t0 });
+    await p.clock.pauseAt(t0 + 1000);
+    await addDog(p, 'Pepper', ['sit']);
+    await go('#/train/spin', p);
+    for (let i = 0; i < 3; i++) {
+      if (i) await p.clock.fastForward(10e3);
+      await p.tap('#tBall');
+    }
+    await p.clock.fastForward(5e3);
+    await setHidden(p, true); // locked 25 s in
+    let s = await saved(p);
+    assert.equal(s.sessions.length, 1);
+    assert.equal(s.sessions[0].ms, 25e3);
+    await p.clock.fastForward('02:00');
+    await setHidden(p, false); // back two minutes later
+    for (let i = 0; i < 2; i++) {
+      await p.clock.fastForward(10e3);
+      await p.tap('#tBall');
+    }
+    await p.click('[data-act="end"]');
+    s = await saved(p);
+    const train = s.sessions.filter(x => x.kind === 'train');
+    assert.equal(train.length, 1, 'one session');
+    assert.equal(train[0].hits, 5);
+    assert.equal(train[0].ms, 45e3, '45 s trained: the two minutes away left out');
+    const spin = s.prog[s.dog].spin;
+    assert.deepEqual([spin.reps, spin.hits, spin.sessions, spin.ms], [5, 5, 1, 45e3], 'Spin counts it once');
+    await p.context().close();
+  });
+
+  await check('after more than ten minutes away, the next tap starts a new session', async () => {
+    const p = await fresh();
+    const t0 = new Date('2026-10-13T18:00:00').getTime();
+    await p.clock.install({ time: t0 });
+    await p.clock.pauseAt(t0 + 1000);
+    await addDog(p, 'Pepper', ['sit']);
+    await go('#/train/spin', p);
+    await tapBall(3, p);
+    await setHidden(p, true);
+    await p.clock.fastForward('11:00');
+    await setHidden(p, false);
+    assert.match(await text('#tCount', p), /Tap the ball/, 'the count starts again');
+    assert.equal(await p.locator('.dot.hit').count(), 0, 'with a new set of five');
+    await tapBall(2, p);
+    await p.click('[data-act="end"]');
+    const s = await saved(p);
+    assert.deepEqual(s.sessions.filter(x => x.kind === 'train').map(x => x.hits), [3, 2]);
+    const spin = s.prog[s.dog].spin;
+    assert.deepEqual([spin.reps, spin.sessions], [5, 2]);
     await p.context().close();
   });
 

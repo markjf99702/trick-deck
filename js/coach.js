@@ -192,11 +192,20 @@ export const kgFromLb = lb => lb * 0.45359237;
 export const lbFromKg = kg => kg / 0.45359237;
 
 // Time trained: from the first tap to a few seconds after the last. A screen left on after that, with the
-// phone put down, isn't training.
+// phone put down, isn't training, and neither is time away from the page (the phone locked, another app open).
 export const TAIL = 5e3;
-export function trainedMs(first, last, now = Date.now()) {
-  return Math.max(0, Math.min(now, last + TAIL) - first);
+export function trainedMs(first, last, now = Date.now(), away = []) {
+  const end = Math.min(now, last + TAIL);
+  return Math.max(0, end - first - awayIn(away, first, end));
 }
+
+// How much of the time from `from` to `to` was spent away from the page, given the spells away as [left, back].
+export function awayIn(away, from, to) {
+  return away.reduce((n, [left, back]) => n + Math.max(0, Math.min(back, to) - Math.max(left, from)), 0);
+}
+
+// Back on the page within this long, a session carries on; after longer, the next tap starts a new one.
+export const SESSION_GAP = 10 * 60e3;
 
 // Readable durations: 45 s, 3 min, 1 h 20 min.
 export function duration(ms) {

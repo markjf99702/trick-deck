@@ -3,7 +3,7 @@
 import { BY_ID } from './tricks.js';
 import * as C from './coach.js';
 import { press, release, buzz, unlock, SOUNDS } from './clicker.js';
-import { esc, icon, card, toast, plural } from './ui.js';
+import { esc, icon, card, toast, plural, whileAway } from './ui.js';
 
 const NUDGES = [
   [180e3, 'Three minutes. A good time to finish on something easy.'],
@@ -77,6 +77,7 @@ export function trainView(ctx, app, id) {
     step: practice ? t.steps.length - 1 : C.stepOf(t, e),
     from: 0, set: [], last: null, verdict: null, hits: 0, misses: 0,
     sets: 0, begun: 0, tapped: 0, ended: false, nudged: 0, history: [], celebrated: false,
+    id: null, wrote: { reps: 0, hits: 0, ms: 0, n: 0 }, away: [], // the saved session, what it added, time away
   };
   T.from = T.step;
   document.title = `Training ${t.name} · Trick Deck`;
@@ -212,23 +213,51 @@ export function trainView(ctx, app, id) {
     }
   }, 500);
 
+  // The session so far, saved under one id: at End, and whenever the page is hidden, so leaving without End
+  // (locking the phone, switching apps, closing the tab) keeps it. The trick's totals take only what's new
+  // since the last save, so nothing counts twice.
+  function record() {
+    const reps = T.hits + T.misses;
+    if (!reps && !T.id) return null;
+    ctx.sync(); // another tab may have trained this trick too
+    const ms = reps ? C.trainedMs(T.begun, T.tapped, Date.now(), T.away) : 0;
+    const now = { reps, hits: T.hits, ms, n: reps ? 1 : 0 };
+    e.reps = (e.reps || 0) + now.reps - T.wrote.reps;
+    e.hits = (e.hits || 0) + now.hits - T.wrote.hits;
+    e.ms = (e.ms || 0) + now.ms - T.wrote.ms;
+    e.sessions = (e.sessions || 0) + now.n - T.wrote.n;
+    T.wrote = now;
+    if (reps) {
+      T.id = ctx.putSession({ id: T.id, dog: dog.id, trick: t.id, kind: 'train', start: T.begun, ms, hits: T.hits, misses: T.misses, from: T.from, to: T.step });
+      e.last = T.tapped;
+      if (e.status === 'new') e.status = 'learning';
+      if (!practice && e.status === 'learning') e.step = T.step;
+    } else {
+      ctx.dropSession(T.id); // every try since the last save was undone
+      T.id = null;
+    }
+    ctx.persist();
+    return reps ? { ms, reps } : null;
+  }
+
   function finish() {
     if (T.ended) return null;
     T.ended = true;
     clearInterval(timer);
-    const reps = T.hits + T.misses;
-    if (!reps) return null;
-    const ms = C.trainedMs(T.begun, T.tapped);
-    ctx.addSession({ trick: t.id, kind: 'train', start: T.begun, ms, hits: T.hits, misses: T.misses, from: T.from, to: T.step });
-    e.reps = (e.reps || 0) + reps;
-    e.hits = (e.hits || 0) + T.hits;
-    e.ms = (e.ms || 0) + ms;
-    e.sessions = (e.sessions || 0) + 1;
-    e.last = Date.now();
-    if (e.status === 'new') e.status = 'learning';
-    if (!practice && e.status === 'learning') e.step = T.step;
-    ctx.persist();
-    return { ms, reps };
+    return record();
+  }
+
+  // Back after more than ten minutes away: the session before was saved as the page was hidden, and the next
+  // tap starts a new one, with a new set of five.
+  function startOver() {
+    Object.assign(T, {
+      id: null, wrote: { reps: 0, hits: 0, ms: 0, n: 0 }, away: [], begun: 0, tapped: 0, hits: 0, misses: 0,
+      from: T.step, set: [], last: null, verdict: null, sets: 0, history: [], nudged: 0,
+    });
+    clock.textContent = '0:00';
+    clock.classList.remove('long');
+    $('#tNudge').hidden = true;
+    paintSet();
   }
 
   function summary() {
@@ -322,6 +351,11 @@ export function trainView(ctx, app, id) {
   };
   document.addEventListener('keydown', keys);
   const sleep = keepAwake();
+  const away = whileAway(() => { if (!T.ended) record(); }, (left, back) => {
+    if (T.ended) return;
+    if (back - left > C.SESSION_GAP) startOver();
+    else T.away.push([left, back]);
+  });
 
   paintStep();
   paintSet();
@@ -331,6 +365,7 @@ export function trainView(ctx, app, id) {
     clearInterval(timer);
     unbind();
     sleep();
+    away();
     document.removeEventListener('keydown', keys);
   };
 }
@@ -338,7 +373,7 @@ export function trainView(ctx, app, id) {
 // A clicker with no plan, for capturing things as they happen.
 export function clickerView(ctx, app) {
   const dog = ctx.dog();
-  const F = { hits: 0, begun: 0, tapped: 0, timer: 0 };
+  const F = { hits: 0, begun: 0, tapped: 0, timer: 0, id: null, away: [] };
   const per = C.treatKcal(dog);
   document.title = 'Clicker · Trick Deck';
 
@@ -371,12 +406,23 @@ export function clickerView(ctx, app) {
   const tick = () => { if (F.begun) $('#fTime').textContent = C.clock(Date.now() - F.begun); };
   F.timer = setInterval(tick, 500);
 
-  const saveIt = () => {
-    if (!F.hits) return false;
-    ctx.addSession({ trick: null, kind: 'free', start: F.begun, ms: C.trainedMs(F.begun, F.tapped), hits: F.hits, misses: 0 });
+  // The clicks so far, saved under one id: on Save session, on leaving, and whenever the page is hidden.
+  const record = () => {
+    if (!F.hits && !F.id) return;
+    if (F.hits) {
+      F.id = ctx.putSession({ id: F.id, dog: dog.id, trick: null, kind: 'free', start: F.begun, ms: C.trainedMs(F.begun, F.tapped, Date.now(), F.away), hits: F.hits, misses: 0 });
+    } else {
+      ctx.dropSession(F.id); // every click since the last save was undone
+      F.id = null;
+    }
     ctx.persist();
-    F.hits = 0; F.begun = 0;
-    return true;
+  };
+  const startOver = () => Object.assign(F, { hits: 0, begun: 0, tapped: 0, id: null, away: [] });
+  const saveIt = () => {
+    const any = F.hits > 0;
+    record();
+    startOver();
+    return any;
   };
 
   app.onclick = ev => {
@@ -403,11 +449,18 @@ export function clickerView(ctx, app) {
     paint();
   });
   const sleep = keepAwake();
+  const away = whileAway(record, (left, back) => {
+    if (back - left <= C.SESSION_GAP) { F.away.push([left, back]); return; }
+    startOver(); // the clicks before were saved as the page was hidden
+    paint();
+    $('#fTime').textContent = '0:00';
+  });
 
   return () => {
     saveIt();
     clearInterval(F.timer);
     unbind();
     sleep();
+    away();
   };
 }

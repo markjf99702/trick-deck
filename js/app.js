@@ -26,7 +26,15 @@ export const ctx = {
     return e;
   },
   sessions: () => S.sessions.filter(s => s.dog === S.dog),
-  addSession(s) { S.sessions.push({ id: newId(), dog: S.dog, ...s }); },
+  // Saves a session, or saves it again under the same id as it goes on. Returns its id.
+  putSession(s) {
+    const had = s.id && S.sessions.find(x => x.id === s.id);
+    if (had) { Object.assign(had, s); return had.id; }
+    const id = s.id || newId();
+    S.sessions.push({ dog: S.dog, ...s, id });
+    return id;
+  },
+  dropSession(id) { S.sessions = S.sessions.filter(x => x.id !== id); },
   treatsToday() {
     const key = C.dayKey(Date.now());
     return ctx.sessions().filter(s => s.kind !== 'show' && C.dayKey(s.start) === key).reduce((n, s) => n + (s.hits || 0), 0);

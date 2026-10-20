@@ -112,6 +112,16 @@ test('time trained ends five seconds after the last tap', () => {
   assert.equal(C.trainedMs(t0, t0, t0 + 60e3), 5e3, 'one tap');
 });
 
+test('time away from the page isn’t time trained', () => {
+  const t0 = 1_000_000;
+  // Taps at 0, 10 and 20 s, the phone locked from 25 s to 2:25, then taps at 2:35 and 2:45.
+  const away = [[t0 + 25e3, t0 + 145e3]];
+  assert.equal(C.trainedMs(t0, t0 + 165e3, t0 + 165e3, away), 45e3);
+  assert.equal(C.trainedMs(t0, t0 + 20e3, t0 + 25e3), 25e3, 'saved as the phone locked');
+  assert.equal(C.trainedMs(t0, t0 + 20e3, t0 + 300e3, [[t0 + 22e3, t0 + 200e3]]), 22e3, 'locked within five seconds of the last tap');
+  assert.equal(C.awayIn([[0, 10], [20, 30]], 5, 25), 10);
+});
+
 test('durations read naturally', () => {
   assert.equal(C.duration(42e3), '42 s');
   assert.equal(C.duration(185e3), '3 min');

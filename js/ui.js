@@ -106,3 +106,26 @@ export function toast(msg) {
 }
 
 export const plural = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
+
+// For a session in progress: leaving the page (locking the phone, switching apps, closing the tab) calls
+// onHide, so the session so far can be saved, and coming back calls onBack with when it left and when it came
+// back. Returns a function that stops listening.
+export function whileAway(onHide, onBack) {
+  let left = 0;
+  const hide = () => { if (left) return; left = Date.now(); onHide(); };
+  const show = () => {
+    if (!left || document.visibilityState !== 'visible') return;
+    const at = left;
+    left = 0;
+    onBack(at, Date.now());
+  };
+  const vis = () => (document.visibilityState === 'hidden' ? hide() : show());
+  document.addEventListener('visibilitychange', vis);
+  window.addEventListener('pagehide', hide);
+  window.addEventListener('pageshow', show);
+  return () => {
+    document.removeEventListener('visibilitychange', vis);
+    window.removeEventListener('pagehide', hide);
+    window.removeEventListener('pageshow', show);
+  };
+}

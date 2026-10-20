@@ -3,7 +3,7 @@
 
 import { TRICKS } from './tricks.js';
 import * as C from './coach.js';
-import { esc, card, icon, plural } from './ui.js';
+import { esc, card, icon, plural, whileAway } from './ui.js';
 
 export function showPool(ctx) {
   const prog = ctx.prog();
@@ -95,7 +95,8 @@ export function showView(ctx, app) {
     const pool = showPool(ctx);
     const r = round();
     const size = r === 'all' ? pool.length : Math.min(pool.length, r);
-    R = { cards: shuffle(pool).slice(0, size), i: 0, results: [], start: Date.now() };
+    // rec: the session record for this show, from its first answer (`from`), saved under one id.
+    R = { cards: shuffle(pool).slice(0, size), i: 0, results: [], rec: { id: null, start: Date.now(), from: 0, away: [] } };
     paintCard();
   }
 
@@ -136,16 +137,20 @@ export function showView(ctx, app) {
     else results();
   }
 
-  function save() {
-    if (!R || !R.results.length || R.saved) return;
-    const first = R.results.filter(x => x.r === 'first').length;
-    ctx.addSession({ trick: null, kind: 'show', start: R.start, ms: Date.now() - R.start, hits: first, misses: R.results.length - first });
-    R.saved = true;
+  // The show so far, saved under one id: when it ends, and whenever the page is hidden. Each answer is already
+  // saved with its trick as it's given.
+  function record() {
+    const part = R ? R.results.slice(R.rec.from) : [];
+    if (!part.length) return;
+    const first = part.filter(x => x.r === 'first').length;
+    const now = Date.now();
+    const ms = now - R.rec.start - C.awayIn(R.rec.away, R.rec.start, now);
+    R.rec.id = ctx.putSession({ id: R.rec.id, dog: dog.id, trick: null, kind: 'show', start: R.rec.start, ms, hits: first, misses: part.length - first });
     ctx.persist();
   }
 
   function results() {
-    save();
+    record();
     const n = R.results.length;
     const first = R.results.filter(x => x.r === 'first').length;
     const weak = R.results.filter(x => x.r !== 'first').map(x => x.t);
@@ -194,9 +199,17 @@ export function showView(ctx, app) {
     if (ev.target.id === 'showVoice') { S.settings.voice = ev.target.checked; ctx.persist(); }
   };
 
+  // Back within ten minutes, the show's session carries on; after longer, the rest of the show is a new one.
+  const away = whileAway(record, (left, back) => {
+    if (!R) return;
+    if (back - left > C.SESSION_GAP) R.rec = { id: null, start: back, from: R.results.length, away: [] };
+    else R.rec.away.push([left, back]);
+  });
+
   setup();
   return () => {
-    save();
+    record();
+    away();
     try { speechSynthesis.cancel(); } catch { /* ignore */ }
   };
 }
