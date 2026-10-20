@@ -347,11 +347,13 @@ try {
     await p.fill('#dKcal', '0'); // a toy or praise: nothing to count
     await p.click('button[type=submit]');
     await p.waitForURL(/#\/dog$/);
+    await p.waitForSelector('.dog-head'); // the address changes a moment before the page does
     assert.doesNotMatch(await text('#app', p), /Infinity/);
     await go('#/dog/edit', p);
     await p.fill('#dKcal', '4');
     await p.click('button[type=submit]');
     await p.waitForURL(/#\/dog$/);
+    await p.waitForSelector('.dog-head'); // the address changes a moment before the page does
     assert.match(await text('#app', p), /At 4 kcal a treat that’s about \d+ treats a day/);
     await p.context().close();
   });
@@ -369,6 +371,7 @@ try {
     assert.equal(await p.inputValue('#dWeight'), '11');
     await p.click('button[type=submit]');
     await p.waitForURL(/#\/dog$/);
+    await p.waitForSelector('.dog-head'); // the address changes a moment before the page does
     assert.equal(await needs(), before, 'same dog, same calories');
     await go('#/dog/edit', p);
     await p.fill('#dWeight', '30'); // typed first: the number means what the menu says next
