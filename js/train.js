@@ -76,7 +76,7 @@ export function trainView(ctx, app, id) {
   const T = {
     step: practice ? t.steps.length - 1 : C.stepOf(t, e),
     from: 0, set: [], last: null, verdict: null, hits: 0, misses: 0,
-    sets: 0, begun: 0, ended: false, nudged: 0, history: [], celebrated: false,
+    sets: 0, begun: 0, tapped: 0, ended: false, nudged: 0, history: [], celebrated: false,
   };
   T.from = T.step;
   document.title = `Training ${t.name} · Trick Deck`;
@@ -158,7 +158,8 @@ export function trainView(ctx, app, id) {
   }
 
   function rep(hit) {
-    if (!T.begun) T.begun = Date.now();
+    T.tapped = Date.now();
+    if (!T.begun) T.begun = T.tapped;
     T.history.push({ hit, set: [...T.set], sets: T.sets, last: T.last, verdict: T.verdict });
     T.verdict = null;
     T.set.push(hit);
@@ -217,7 +218,7 @@ export function trainView(ctx, app, id) {
     clearInterval(timer);
     const reps = T.hits + T.misses;
     if (!reps) return null;
-    const ms = Date.now() - T.begun;
+    const ms = C.trainedMs(T.begun, T.tapped);
     ctx.addSession({ trick: t.id, kind: 'train', start: T.begun, ms, hits: T.hits, misses: T.misses, from: T.from, to: T.step });
     e.reps = (e.reps || 0) + reps;
     e.hits = (e.hits || 0) + T.hits;
@@ -337,7 +338,7 @@ export function trainView(ctx, app, id) {
 // A clicker with no plan, for capturing things as they happen.
 export function clickerView(ctx, app) {
   const dog = ctx.dog();
-  const F = { hits: 0, begun: 0, timer: 0 };
+  const F = { hits: 0, begun: 0, tapped: 0, timer: 0 };
   const per = C.treatKcal(dog);
   document.title = 'Clicker · Trick Deck';
 
@@ -372,7 +373,7 @@ export function clickerView(ctx, app) {
 
   const saveIt = () => {
     if (!F.hits) return false;
-    ctx.addSession({ trick: null, kind: 'free', start: F.begun, ms: Date.now() - F.begun, hits: F.hits, misses: 0 });
+    ctx.addSession({ trick: null, kind: 'free', start: F.begun, ms: C.trainedMs(F.begun, F.tapped), hits: F.hits, misses: 0 });
     ctx.persist();
     F.hits = 0; F.begun = 0;
     return true;
@@ -396,7 +397,8 @@ export function clickerView(ctx, app) {
   };
 
   const unbind = bindBall($('#fBall'), ctx, () => {
-    if (!F.begun) F.begun = Date.now();
+    F.tapped = Date.now();
+    if (!F.begun) F.begun = F.tapped;
     F.hits++;
     paint();
   });

@@ -191,6 +191,13 @@ export function treatReport(dog, treats) {
 export const kgFromLb = lb => lb * 0.45359237;
 export const lbFromKg = kg => kg / 0.45359237;
 
+// Time trained: from the first tap to a few seconds after the last. A screen left on after that, with the
+// phone put down, isn't training.
+export const TAIL = 5e3;
+export function trainedMs(first, last, now = Date.now()) {
+  return Math.max(0, Math.min(now, last + TAIL) - first);
+}
+
 // Readable durations: 45 s, 3 min, 1 h 20 min.
 export function duration(ms) {
   const s = Math.round(ms / 1000);

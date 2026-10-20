@@ -257,6 +257,36 @@ try {
     }
   });
 
+  await check('time trained ends five seconds after the last tap', async () => {
+    const p = await fresh();
+    const saved = () => p.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')));
+    const t0 = new Date('2026-10-13T18:00:00').getTime();
+    await p.clock.install({ time: t0 });
+    await p.clock.pauseAt(t0 + 1000); // time moves only when the test moves it
+    await addDog(p, 'Pepper', ['sit']);
+    await go('#/train/spin', p);
+    for (let i = 0; i < 10; i++) {
+      if (i) await p.clock.fastForward(10e3);
+      await p.tap('#tBall');
+    }
+    await p.clock.fastForward('02:00:00'); // the phone put down with the screen on, then End
+    await p.click('[data-act="end"]');
+    assert.match(await text('#tSheet .tiles', p), /Time\s*1:35\b/, '90 s from the first tap to the last, and 5 s more');
+    let s = await saved();
+    assert.equal(s.sessions.find(x => x.kind === 'train').ms, 95e3);
+    assert.equal(s.prog[s.dog].spin.ms, 95e3);
+    await go('#/clicker', p);
+    for (let i = 0; i < 3; i++) {
+      if (i) await p.clock.fastForward(20e3);
+      await p.tap('#fBall');
+    }
+    await p.clock.fastForward('01:00:00');
+    await p.click('[data-act="save"]');
+    s = await saved();
+    assert.equal(s.sessions.find(x => x.kind === 'free').ms, 45e3, 'the free clicker too');
+    await p.context().close();
+  });
+
   await check('a quick double tap only arms Delete and Erase everything', async () => {
     const p = await fresh();
     const dogs = () => p.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')).dogs.length);

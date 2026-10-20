@@ -105,6 +105,13 @@ test('reliability counts first-try answers in the last ten', () => {
   assert.deepEqual(C.reliability(checks), { first: 8, total: 10 });
 });
 
+test('time trained ends five seconds after the last tap', () => {
+  const t0 = 1_000_000;
+  assert.equal(C.trainedMs(t0, t0 + 90e3, t0 + 2 * 3600e3), 95e3, 'two hours with the phone put down don’t count');
+  assert.equal(C.trainedMs(t0, t0 + 90e3, t0 + 92e3), 92e3, 'ended two seconds after the last tap');
+  assert.equal(C.trainedMs(t0, t0, t0 + 60e3), 5e3, 'one tap');
+});
+
 test('durations read naturally', () => {
   assert.equal(C.duration(42e3), '42 s');
   assert.equal(C.duration(185e3), '3 min');
