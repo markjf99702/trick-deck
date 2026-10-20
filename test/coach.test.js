@@ -56,6 +56,14 @@ test('proofing: held positions need duration, moves do not', () => {
   assert.ok(!C.proofDone(BY_ID.sit, { proof: { place: 1, distraction: 1, distance: 1 } }));
 });
 
+test('card 0 is proofed with the click, not a cue', () => {
+  const items = C.proofItems(BY_ID.charge);
+  assert.deepEqual(items.map(p => p.id), C.proofItems(BY_ID.spin).map(p => p.id), 'the same items');
+  assert.equal(items.find(p => p.id === 'distance').about, 'Works when you click from a few steps away.');
+  for (const p of items) assert.doesNotMatch(p.about, /cue/);
+  assert.match(C.proofItems(BY_ID.spin).find(p => p.id === 'distance').about, /give the cue/, 'other cards keep theirs');
+});
+
 test('streak survives until a whole day is missed', () => {
   const now = new Date(2026, 8, 25, 18, 0).getTime();
   const at = (d, h = 9) => ({ start: new Date(2026, 8, d, h).getTime() });

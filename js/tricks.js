@@ -31,6 +31,8 @@ const T = [
       { do: 'Check it works', click: 'Click when your dog isn’t looking at you.',
         tip: 'If their head whips round toward you, the clicker is charged. From now on a click always means a treat, even one you didn’t mean.' },
     ],
+    // Card 0 has no cue, so it's proofed from a distance with the click itself.
+    proof: { distance: 'Works when you click from a few steps away.' },
     fix: [
       'Your dog flinches at the click: switch to the Soft sound in Settings, or muffle a real clicker in a pocket.',
       'Your dog stares at your treat hand: keep treats in a pouch behind your back and only reach after the click.',

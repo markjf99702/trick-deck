@@ -68,7 +68,9 @@ export const PROOF = [
   { id: 'duration', label: 'Holds it', about: 'Holds the position until you release them, 10 seconds or more.', hold: true },
 ];
 
-export const proofItems = trick => PROOF.filter(p => !p.hold || trick.hold);
+// A card can word an item its own way (card 0 has no cue to give from a distance); the items stay the same.
+export const proofItems = trick => PROOF.filter(p => !p.hold || trick.hold)
+  .map(p => (trick.proof?.[p.id] ? { ...p, about: trick.proof[p.id] } : p));
 
 export function proofDone(trick, e) {
   const p = e.proof || {};
