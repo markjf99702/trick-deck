@@ -2,7 +2,7 @@
 // Your dogs and progress live in localStorage, not here.
 // Network first, so a new version shows up as soon as you're online.
 
-const CACHE = 'trickdeck-v2';
+const CACHE = 'trickdeck-v3';
 const SHELL = [
   './', 'index.html', 'carry.js', 'css/app.css', 'icon.svg', 'manifest.webmanifest',
   'fonts/fredoka.woff2', 'fonts/figtree.woff2',
