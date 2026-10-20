@@ -235,6 +235,28 @@ try {
     await p.context().close();
   });
 
+  await check('the ball stays put when the coach weighs in on a short phone', async () => {
+    for (const [width, height] of [[375, 667], [390, 664], [360, 640]]) {
+      const p = await fresh({ viewport: { width, height } });
+      const at = `${width}x${height}`;
+      const top = () => p.evaluate(() => Math.round(document.getElementById('tBall').getBoundingClientRect().top + scrollY));
+      await go('', p);
+      await p.click('#trySample');
+      await go('#/train/rollover', p); // Biscuit is on step 3 of 5, so both verdicts come with buttons
+      const before = await top();
+      await tapBall(5, p);
+      assert.match(await text('.verdict', p), /Go to step 4/);
+      assert.equal(await top(), before, `${at}: Push moved the ball`);
+      await p.click('[data-act="dismiss"]');
+      for (let i = 0; i < 5; i++) await p.click('[data-act="miss"]');
+      assert.match(await text('.verdict', p), /Back to step 2/);
+      assert.equal(await top(), before, `${at}: Drop moved the ball`);
+      const bottom = await p.locator('#tBall').evaluate(el => el.getBoundingClientRect().bottom);
+      assert.ok(bottom <= height, `${at}: the ball ends at ${Math.round(bottom)}px, off the screen`);
+      await p.context().close();
+    }
+  });
+
   await check('a quick double tap only arms Delete and Erase everything', async () => {
     const p = await fresh();
     const dogs = () => p.evaluate(() => JSON.parse(localStorage.getItem('trickdeck.v1')).dogs.length);
